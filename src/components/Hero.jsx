@@ -2,7 +2,7 @@ import { m } from 'framer-motion'
 import { identity, hero } from '../data/content'
 import { fadeUp, stagger, IconDownload, IconMail } from './Reveal'
 
-export default function Hero() {
+export default function Hero({ onVoyage }) {
   return (
     <section className="hero" id="top" aria-label="Introduction">
       <div className="hero-veil" aria-hidden="true" />
@@ -53,6 +53,13 @@ export default function Hero() {
                 <div className="lbl">{s.label}</div>
               </m.div>
             ))}
+          </m.div>
+
+          <m.div variants={fadeUp}>
+            <button type="button" className="hero-voyage mono" onClick={onVoyage}>
+              Take the voyage
+              <span aria-hidden="true"> →</span>
+            </button>
           </m.div>
         </m.div>
       </div>

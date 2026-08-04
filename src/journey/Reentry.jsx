@@ -52,9 +52,8 @@ export default function Reentry({ fx, reduced }) {
 function Stat({ p, start, val, label }) {
   const o = useTransform(p, [start, start + 0.1], [0, 1])
   const y = useTransform(p, [start, start + 0.12], [36, 0])
-  const blur = useTransform(p, [start, start + 0.12], ['blur(8px)', 'blur(0px)'])
   return (
-    <m.div className="reentry-stat" style={{ opacity: o, y, filter: blur }}>
+    <m.div className="reentry-stat" style={{ opacity: o, y }}>
       <span className="reentry-val">{val}</span>
       <span className="mono reentry-lbl">{label}</span>
     </m.div>

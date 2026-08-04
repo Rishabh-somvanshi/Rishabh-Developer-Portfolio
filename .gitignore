@@ -11,3 +11,8 @@ dist/
 dist-*.zip
 zi5DoJLj
 ziD32jC0
+
+# sdd scratch (briefs, reports, diffs) — ledger stays tracked
+.superpowers/sdd/*-brief.md
+.superpowers/sdd/*-report.md
+.superpowers/sdd/*.diff

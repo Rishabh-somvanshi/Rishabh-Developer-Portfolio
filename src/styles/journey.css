@@ -134,9 +134,7 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--radius);
   padding: 0.625rem 1.125rem;
-  background: rgba(17, 17, 19, 0.78);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(17, 17, 19, 0.94);
   transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
 }
 
@@ -327,7 +325,6 @@
   height: 2.5px;
   border-radius: 2px;
   background: linear-gradient(to left, rgba(237, 237, 239, 0.9), rgba(237, 237, 239, 0));
-  filter: blur(0.4px);
 }
 
 .meteor-head {
@@ -568,7 +565,6 @@
   width: 26%;
   aspect-ratio: 1;
   background: radial-gradient(circle, #fff7ea 0%, #f5a93d 34%, rgba(232, 148, 42, 0.25) 68%, transparent 100%);
-  filter: blur(1px);
   box-shadow: 0 0 60px 18px rgba(232, 148, 42, 0.35);
 }
 
@@ -633,11 +629,14 @@
   aspect-ratio: 1;
   background: conic-gradient(
     from 0deg,
-    rgba(245, 169, 61, 0.5) 0deg 10deg, transparent 14deg 180deg,
-    rgba(245, 169, 61, 0.5) 180deg 190deg, transparent 194deg 360deg
+    rgba(245, 169, 61, 0.5) 0deg 10deg,
+    transparent 13deg 177deg,
+    rgba(245, 169, 61, 0.5) 180deg 190deg,
+    transparent 193deg 357deg,
+    rgba(245, 169, 61, 0.5) 360deg
   );
-  filter: blur(3px);
   animation: spin 3.2s linear infinite;
+  will-change: transform;
 }
 
 .pulsar-ping {
@@ -692,7 +691,6 @@
   width: 56%;
   aspect-ratio: 1;
   border: 2px solid rgba(245, 169, 61, 0.9);
-  filter: blur(1px);
   box-shadow: 0 0 24px 4px rgba(232, 148, 42, 0.45), inset 0 0 18px rgba(232, 148, 42, 0.35);
 }
 
@@ -709,15 +707,14 @@
     rgba(232, 148, 42, 0.3) 280deg,
     rgba(232, 148, 42, 0) 360deg
   );
-  filter: blur(5px);
   animation: spin 14s linear infinite;
+  will-change: transform;
 }
 
 .bh-lens {
   width: 96%;
   aspect-ratio: 1;
-  border: 1px solid rgba(245, 169, 61, 0.22);
-  filter: blur(2px);
+  border: 2px solid rgba(245, 169, 61, 0.13);
   transform: rotate(-16deg) scaleY(0.55);
 }
 
@@ -924,8 +921,13 @@
   top: 0.5rem;
   width: 70vw;
   height: 8rem;
-  background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(232, 148, 42, 0.4), transparent 75%);
-  filter: blur(2px);
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 100%,
+    rgba(232, 148, 42, 0.4) 0%,
+    rgba(232, 148, 42, 0.22) 38%,
+    rgba(232, 148, 42, 0.08) 60%,
+    transparent 78%
+  );
 }
 
 .earth-lights {
@@ -1152,14 +1154,114 @@
 
 /* reduced motion: freeze ornamental animation, keep content readable */
 @media (prefers-reduced-motion: reduce) {
-  .float-slow,
-  .float-slower,
-  .nova-rays,
-  .pulsar-beam,
-  .pulsar-ping,
-  .bh-disk,
-  .planet-aura,
-  .cue-line {
+  *,
+  *::before,
+  *::after {
     animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* A scene scrolled well out of view pays nothing: its animations stop and the
+   browser is free to skip rendering its subtree entirely. What actually keeps
+   parking layout-safe is the explicit inline `height` every .scn section gets
+   from useScene (see WorldScene.jsx, Origins.jsx, etc.) — that inline height
+   wins over content-visibility's intrinsic-size placeholder. contain-
+   intrinsic-size below is just the fallback for a scene rendered without an
+   explicit height. */
+.scn-parked *,
+.scn-parked *::before,
+.scn-parked *::after {
+  animation-play-state: paused !important;
+}
+
+.scn-parked {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100vh;
+}
+
+/* Film grain and vignette. A single fixed, non-interactive layer: the grain is
+   an inline SVG turbulence tile, so there is no network request and nothing
+   animates. Cheap, and it does most of the cinematic work.
+   Grain is painted with plain opacity on a ::after layer instead of
+   mix-blend-mode: soft-light. The blend looks richer, but mix-blend-mode on a
+   fixed, full-viewport element can't be composited as its own cacheable GPU
+   layer — it forces the compositor to re-blend the whole viewport every frame
+   anything beneath it changes, and the starfield canvas redraws continuously
+   throughout the voyage. Anyone who profiles this and finds the cost
+   acceptable can restore the richer look by adding
+   mix-blend-mode: soft-light to the ::after rule below and raising its
+   opacity back up toward 0.5. */
+.voyage-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background-image: radial-gradient(ellipse 120% 90% at 50% 50%, transparent 42%, rgba(0, 0, 0, 0.55) 100%);
+  background-size: cover;
+}
+
+.voyage-atmosphere::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+  opacity: 0.22;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voyage-atmosphere::after {
+    opacity: 0.14;
+  }
+}
+
+/* The far side of the accretion disk, lensed up and over the event horizon —
+   the shape that makes the silhouette read as Gargantua rather than a ring.
+   A bordered ellipse clipped to its top half; no blur, no animation. */
+.bh-arc {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 59%;
+  aspect-ratio: 200/116;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border-top: 3px solid rgba(255, 214, 148, 0.78);
+  border-left: 2px solid rgba(245, 169, 61, 0.34);
+  border-right: 2px solid rgba(245, 169, 61, 0.34);
+  border-bottom: none;
+  clip-path: inset(0 0 46% 0);
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  /* Phones do the least well with large composited glows, and they are where the
+     lag was most obvious. Drop the widest, softest layers — nova-rays
+     (0.05–0.07 alpha) and bh-lens (0.13 alpha) cost more than they contribute
+     at phone size. pulsar-beam is deliberately left off this list, i.e. it
+     keeps rendering on phones: it's the element that visually reads as
+     "pulsar" (a rotating beam up to 0.5 alpha), and now that its
+     filter: blur(3px) has been removed it's just a conic-gradient driven by
+     animation: spin with will-change: transform — compositor-only, so it's
+     cheap even on phones. */
+  .nova-rays,
+  .bh-lens {
+    display: none;
+  }
+
+  .bh-disk {
+    animation-duration: 26s;
+  }
+}
+
+/* Reduced-motion should win over the phone default when both apply: gate this
+   rule to no-preference so a phone with reduced motion enabled falls through
+   to the 0.14 opacity set above instead of this louder 0.16. */
+@media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
+  .voyage-atmosphere::after {
+    opacity: 0.16;
   }
 }

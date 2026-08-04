@@ -85,6 +85,7 @@ export default function Journey({ onSkip }) {
   return (
     <div className="journey" id="top">
       <Starfield fx={fx} still={!!reduced} />
+      <div className="voyage-atmosphere" aria-hidden="true" />
       <Hud onSkip={onSkip} />
       <main>
         <Launch onSkip={onSkip} />

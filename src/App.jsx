@@ -8,23 +8,32 @@ import Skills from './components/Skills'
 import Contact from './components/Contact'
 import Journey from './journey/Journey'
 import { identity } from './data/content'
-
-const WORK_HASHES = new Set(['#overview', '#experience', '#work', '#skills', '#contact']) // dossier anchors
+import {
+  VOYAGE_HASH,
+  resolveInitialMode,
+  readStoredMode,
+  writeStoredMode,
+} from './lib/viewMode'
 
 /**
  * Two ways in:
- *  - The voyage (default): a scroll-driven journey home through the career.
- *  - The dossier: the dense classic view, one click away for hurried readers.
- * Deep links to classic anchors, and reduced-motion users, land on the dossier.
+ *  - The dossier (default): the dense classic view a hurried reader wants.
+ *  - The voyage: a scroll-driven journey home through the career, opt-in.
+ * An explicit hash always wins, so a pasted link lands where it says.
  */
 function initialMode() {
-  if (typeof window === 'undefined') return 'voyage'
+  if (typeof window === 'undefined') return 'work'
+  let prefersReducedMotion = false
   try {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 'work'
+    prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   } catch {
-    /* matchMedia unavailable — default to voyage */
+    /* matchMedia unavailable — treat as no preference */
   }
-  return WORK_HASHES.has(window.location.hash) ? 'work' : 'voyage'
+  return resolveInitialMode({
+    hash: window.location.hash,
+    stored: readStoredMode(),
+    prefersReducedMotion,
+  })
 }
 
 function Footer() {
@@ -54,7 +63,13 @@ export default function App() {
       const { hash } = window.location
       if (mode === 'work' && hash && hash !== '#overview') {
         requestAnimationFrame(() => {
-          document.querySelector(hash)?.scrollIntoView()
+          try {
+            document.querySelector(hash)?.scrollIntoView()
+          } catch {
+            /* malformed hash (e.g. #utm_source=x, #!x) is not a valid
+               selector — ignore it rather than throw inside the rAF
+               callback */
+          }
         })
       }
       return
@@ -62,14 +77,16 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [mode])
 
-  const skip = () => {
+  const exitVoyage = () => {
     setMode('work')
+    writeStoredMode('work')
     window.history.replaceState(null, '', '#overview')
   }
 
-  const voyage = () => {
+  const enterVoyage = () => {
     setMode('voyage')
-    window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    writeStoredMode('voyage')
+    window.history.replaceState(null, '', VOYAGE_HASH)
   }
 
   return (
@@ -77,19 +94,19 @@ export default function App() {
       <MotionConfig reducedMotion="user">
         {mode === 'voyage' ? (
           <>
-            <button className="skip-link" onClick={skip} type="button">
+            <button className="skip-link" onClick={exitVoyage} type="button">
               Skip to content
             </button>
-            <Journey onSkip={skip} />
+            <Journey onSkip={exitVoyage} />
           </>
         ) : (
           <>
             <a className="skip-link" href="#experience">
               Skip to content
             </a>
-            <Nav onVoyage={voyage} />
+            <Nav onVoyage={enterVoyage} />
             <main id="overview">
-              <Hero />
+              <Hero onVoyage={enterVoyage} />
               <Experience />
               <CaseStudies />
               <Skills />

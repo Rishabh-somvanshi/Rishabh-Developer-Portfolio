@@ -259,9 +259,7 @@ section {
 }
 
 .nav.scrolled {
-  background: rgba(10, 10, 11, 0.82);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(10, 10, 11, 0.94);
   border-bottom-color: var(--border);
 }
 
@@ -979,4 +977,22 @@ footer {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Entry to the voyage — deliberately quieter than the résumé and contact CTAs,
+   so it reads as an aside rather than competing with them. */
+.hero-voyage {
+  margin-top: var(--s3);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+
+.hero-voyage:hover,
+.hero-voyage:focus-visible {
+  color: var(--accent);
 }
