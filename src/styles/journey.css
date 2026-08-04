@@ -1279,23 +1279,26 @@ html.lenis.lenis-smooth {
     font-size: clamp(2.25rem, 1.75rem + 3vw, 3.25rem);
   }
 
-  /* Twin-lights (.beat) is the same shape as re-entry but with a card's
-     worth of copy instead of three stats, so line-count is much less
-     predictable (paragraph reflow, not fixed short strings). Rather than
-     guess exact wrap counts, this makes the tall parts deterministic: the
-     nova/pulsar artwork gets a real width cap instead of a 220px floor, the
-     study copy is clamped to 2 lines instead of trusting it to wrap short,
-     and the secondary "outcome" line — genuinely secondary once the tagline
-     and headline stat already carry the point — is dropped rather than left
-     to wrap unpredictably. Everything else is just the same margin trim as
-     above (16px reserves down to 8px). */
-  .beat .world-visual {
-    margin-bottom: var(--s1);
-  }
+  /* Twin-lights (.beat) is the same shape as re-entry but carries a card's
+     worth of copy instead of three fixed strings, so its height depends on
+     paragraph reflow and cannot be pinned exactly without a renderer.
 
+     The height is therefore bought from the decoration, never from the copy.
+     These are the two self-built projects, and lines like "in live use
+     planning an actual wedding" and "loads instantly, works entirely
+     on-device" are the most concrete evidence in the scene — on a phone,
+     where a large share of readers will see this, hiding them to fit a
+     decorative starburst would be exactly the wrong trade. So the nova and
+     pulsar artwork is dropped outright below this threshold (worth 220px+
+     including its margin) and every line of text renders in full.
+
+     An earlier revision clamped .world-log to two lines, hid the secondary
+     outcome sentence, and capped the tag row at two. All three are
+     deliberately not done here. */
   .beat .nova,
-  .beat .pulsar {
-    width: clamp(140px, 26vw, 380px);
+  .beat .pulsar,
+  .beat .world-visual {
+    display: none;
   }
 
   .study-card-j .world-h {
@@ -1304,31 +1307,96 @@ html.lenis.lenis-smooth {
 
   .study-card-j .world-log {
     margin-top: var(--s1);
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
+    line-height: 1.35;
   }
 
   .study-card-j .scene-body.sm {
     margin-top: var(--s1);
   }
 
-  .study-card-j .scene-body.sm.dim {
-    display: none;
-  }
-
   .study-card-j .world-tags {
     margin-top: var(--s1);
   }
 
-  .study-card-j .world-tags .tag:nth-child(n + 3) {
-    display: none;
-  }
-
   .study-card-j .link-arrow {
     margin-top: var(--s1);
+  }
+
+  /* The four world scenes overflow their own stage on short phones — the card
+     runs past the bottom of a 100svh box that clips with overflow: hidden, so
+     the tech tags (and part of the last bullet) simply vanish. Measured at
+     375x667 before this rule: curo over by 70px, mercantile 52, vault 15,
+     porcelain 25. This predates the mobile work; it is fixed here because it
+     is the same defect — résumé content silently cut off on a phone.
+
+     Reclaimed from spacing and the planet, not from copy. The planet stays
+     visible, just smaller: .world-visual also holds the three award moons in
+     the mercantile scene (Applause / Best Performer / On-The-Spot), which
+     appear nowhere else, so hiding that column would delete content. */
+  .world-stage {
+    padding-top: 0;
+  }
+
+  /* The role heading and the narrative line carry the most reclaimable height
+     here. The bullets are already at --fs-xs from the 900px breakpoint and are
+     left alone — they are the substance of the entry, and 12px is as small as
+     they should go. */
+  .world-h {
+    font-size: clamp(1.25rem, 1.05rem + 1vw, 1.5rem);
+    margin: var(--s1) 0 0.25rem;
+  }
+
+  .world-log {
+    font-size: var(--fs-base);
+    line-height: 1.35;
+  }
+
+  .world-stage .planet {
+    width: clamp(88px, 24vw, 150px);
+  }
+
+  .world-stage .world-visual {
+    margin-bottom: var(--s1);
+  }
+
+  .world-card .world-log {
+    margin-top: var(--s1);
+  }
+
+  .world-points {
+    margin-top: var(--s2);
+  }
+
+  .world-points li + li {
+    margin-top: 0.25rem;
+  }
+
+  .world-tags {
+    margin-top: var(--s1);
+    gap: 0.25rem;
+  }
+
+  .world-tags .tag {
+    padding: 0.2rem 0.45rem;
+  }
+}
+
+/* Shortest phones — an SE-class device with the URL bar showing lands here.
+   The world cards still ran ~25px past the stage at 610px tall after the
+   tier above, so the planet gives up more of its height and the copy tightens
+   its leading. The planet is not hidden even here: .world-visual also carries
+   the mercantile award moons, which appear nowhere else. */
+@media (max-width: 560px) and (max-height: 640px) {
+  .world-stage .planet {
+    width: clamp(64px, 18vw, 110px);
+  }
+
+  .world-points li {
+    line-height: 1.4;
+  }
+
+  .world-log {
+    line-height: 1.25;
   }
 }
 
