@@ -54,7 +54,24 @@ The two hand-written scroll listeners are **not** a problem — both are passive
 and rAF-throttled, and set only a boolean or an index. The cost is paint and
 compositing, not JavaScript.
 
-### Finding 3 — the source code no longer exists
+### Finding 3 — the source code exists, it was merely unlinked
+
+The source is at `D:\Resumes\Rishabh\rishabh-somvanshi-developer`: a complete
+Vite 5 + React 18 + framer-motion 11 project, 25 source files under `src/`,
+plus `DESIGN_SYSTEM.md`, `README.md`, `netlify.toml`, and `public/`.
+
+Confirmed as the origin of the deployed site:
+
+- The project's root `index.html` is identical to the deployed `index.html`.
+- `src/App.jsx` implements exactly the mode behaviour measured on the live
+  site: `initialMode()` returns `'work'` (dossier) when the URL hash is one of
+  `#overview`, `#experience`, `#work`, `#skills`, `#contact`, **or** when
+  `prefers-reduced-motion: reduce` matches; otherwise `'voyage'`.
+- `package.json` `name` is `rishabh-somvanshi-developer`, matching the Netlify
+  site.
+
+The following remain true, and are why the project was not linked — not
+evidence that it was lost:
 
 - Netlify reports the production deploy (2026-07-15) as `deploy_source: "drop"`,
   `manual_deploy: true`, `has_source_zip: false`, with no commit, branch, or
@@ -62,13 +79,18 @@ compositing, not JavaScript.
 - Sourcemaps return 404; the bundle contains no `sourceMappingURL`.
 - The GitHub account `Rishabh-somvanshi` has no portfolio repository; its newest
   push is from 2024.
-- Full sweeps of `D:\` and the user profile found no matching Vite project.
-  `D:\Resumes\Rishabh\Portfolio` is the *older* Naruto-themed single-file site,
-  byte-identical to what `rishabh-somvanshi-dev.netlify.app` serves.
+- The project is not under version control (`.git` absent), despite having a
+  `.gitignore`.
 
-Recoverable from the deployed artefacts: all copy, the complete design-token
-system, fonts, colours, section structure, and both view modes. The minified
-bundle is not worth reverse-engineering component-by-component.
+Two caveats on the working copy:
+
+- `dist/` is stale — it dates from 2026-07-14 and contains bundle hashes
+  (`index-Bv4rfDfY.js`, `index-CcVd_IRS.js`) that do not match the deployed
+  `index-X_nUHHwl.js`. The deployed build was produced later, on 2026-07-15,
+  and was not retained.
+- `node_modules/` is broken: `@rollup/rollup-win32-x64-msvc` is missing and
+  `node_modules/.bin/` is unpopulated, so the project does not currently build.
+  This is the known npm optional-dependency defect and needs a clean reinstall.
 
 ## Goals
 
@@ -86,12 +108,25 @@ bundle is not worth reverse-engineering component-by-component.
 
 ## Approach
 
-Rebuild as a fresh Vite + React + TypeScript project in `D:\Portfolio`, faithful
-to the current design, with the view-mode defaults inverted.
+Modify the recovered source in place. No rebuild — that was predicated on the
+source being lost, which was wrong.
+
+The existing project is moved into `D:\Portfolio` under git, its broken
+`node_modules` is reinstalled, and the changes below are made to files that
+already exist. This eliminates the visual-fidelity risk entirely, since nothing
+is reconstructed.
+
+Notably, most of the routing work is already present and only needs its default
+flipped: `Nav.jsx` already accepts an `onVoyage` callback, `App.jsx` already has
+`skip()` and `voyage()` handlers, and `MotionConfig reducedMotion="user"` is
+already set.
 
 ### Routing and view modes
 
-- `/` renders the **dossier** (current classic view). This is the default.
+Implemented by changing `initialMode()` and the mode handlers in `src/App.jsx`.
+
+- `/` renders the **dossier** (current classic view). This is the default —
+  `initialMode()` returns `'work'` instead of `'voyage'`.
 - The voyage is opt-in via an explicit control in the dossier hero
   ("Take the voyage →").
 - `/#overview` continues to resolve to the dossier, so links already pasted into
@@ -103,7 +138,7 @@ to the current design, with the view-mode defaults inverted.
 - Deep links to dossier sections (`#experience`, `#work`, `#skills`,
   `#contact`) work on cold load.
 
-### Content inventory (carried over verbatim)
+### Content inventory (unchanged — lives in `src/data/content.js`)
 
 - **Hero** — eyebrow "Senior Frontend Engineer · React"; name; the 6.5+ years
   summary naming UnitedHealth Group, Albertsons, Fiserv, Estée Lauder; résumé
@@ -144,6 +179,8 @@ Layout: `--container: 68rem`, `--radius: 8px`, `--radius-lg: 12px`,
 the `--fs-*` type scale including `--fs-hero: clamp(2.875rem, 1.6rem + 6.4vw, 5.5rem)`.
 
 ### Performance work (voyage)
+
+Scoped to `src/journey/*.jsx` and `src/styles/journey.css` (21 KB).
 
 - Replace animated `filter: blur()` with pre-baked radial-gradient or SVG
   assets. Nothing that is blurred may also be animated.
@@ -189,9 +226,16 @@ the meta tags are static in `index.html`.
 
 ## Risks
 
-- **Visual fidelity drift.** The rebuild is reconstructed from the rendered DOM
-  and minified CSS, not original source. Mitigated by the committed mirror for
+- ~~Visual fidelity drift.~~ Eliminated — the original source was recovered, so
+  nothing is reconstructed. The committed mirror remains available for
   side-by-side comparison.
+- **Cannot currently build.** `node_modules` is missing
+  `@rollup/rollup-win32-x64-msvc`. A clean `npm install` is the first
+  implementation step, and must succeed before any change can be verified.
+- **Deployed build is not reproducible byte-for-byte.** The retained `dist/`
+  predates the deployed build, so the exact deployed bundle cannot be
+  regenerated for comparison. The committed mirror of the live output is the
+  reference instead.
 - **Production URL breakage.** Mitigated by preview-first deploys and by keeping
   `#overview` resolving to the dossier.
 - **GitHub push requires credentials.** The `gh` CLI is not installed and no
