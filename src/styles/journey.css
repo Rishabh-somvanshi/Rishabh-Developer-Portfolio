@@ -205,8 +205,23 @@
 }
 
 /* ---------- launch ---------- */
+/* .launch-stage shares its element with .scn-stage (see Launch.jsx: both
+   classes sit on the same sticky, 100svh flex column), so padding-bottom
+   here shrinks the box .scn-stage's `justify-content: center` centers
+   .launch-copy within — it does not fight the inherited centring, it just
+   moves the centre line up. .scroll-cue is absolute and bottom-anchored
+   inside that same box, so it never participates in the flex centering;
+   nothing previously reserved its lane, which is the root cause of the
+   overlap. The cue is ~76px tall and sits `clamp(1.5rem, 5vh, 3rem)` off
+   the bottom, so its lane needs roughly 76px + up to 48px = ~124px at most;
+   clamp(7rem, 16vh, 10rem) (112px–160px) reserves that plus breathing room
+   and scales with viewport height. Below ~600px tall there isn't enough
+   room left for both the centred copy and the cue even with this reserve,
+   so the cue is hidden there instead (see the max-height query below) and
+   this padding is reset to 0 so the copy recentres normally. */
 .launch-stage {
   flex-direction: column;
+  padding-bottom: clamp(7rem, 16vh, 10rem);
 }
 
 .launch-copy {
@@ -1148,6 +1163,21 @@
 @media (max-height: 700px) {
   .manifest .scene-h.sm,
   .manifest-domains {
+    display: none;
+  }
+}
+
+/* Below ~600px tall, the launch copy's own height leaves no room for the
+   reserved scroll-cue lane without pushing .launch-copy's top past the
+   stage edge. There's genuinely nowhere left to put the cue at this
+   height, so it's hidden outright and the reserve padding above is
+   dropped so the copy goes back to simple, unclipped centring. */
+@media (max-height: 600px) {
+  .launch-stage {
+    padding-bottom: 0;
+  }
+
+  .scroll-cue {
     display: none;
   }
 }
