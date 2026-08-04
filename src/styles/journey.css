@@ -1154,15 +1154,12 @@
 
 /* reduced motion: freeze ornamental animation, keep content readable */
 @media (prefers-reduced-motion: reduce) {
-  .float-slow,
-  .float-slower,
-  .nova-rays,
-  .pulsar-beam,
-  .pulsar-ping,
-  .bh-disk,
-  .planet-aura,
-  .cue-line {
+  *,
+  *::before,
+  *::after {
     animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

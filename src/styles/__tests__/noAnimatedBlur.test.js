@@ -47,6 +47,38 @@ describe('paint cost in stylesheets', () => {
     const allOffenders = [...journeyOffenders, ...globalOffenders]
     expect(allOffenders).toEqual([])
   })
+
+  /**
+   * Extract every reduced-motion block by scanning balanced braces. There is
+   * more than one such block in this file, and a regex spanning to the last
+   * closing brace would silently match across unrelated rules.
+   */
+  function reducedMotionBlocks(source) {
+    const blocks = []
+    const opener = /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{/g
+    let match
+    while ((match = opener.exec(source))) {
+      let depth = 1
+      let i = match.index + match[0].length
+      const start = i
+      while (i < source.length && depth > 0) {
+        if (source[i] === '{') depth++
+        else if (source[i] === '}') depth--
+        i++
+      }
+      blocks.push(source.slice(start, i - 1))
+    }
+    return blocks
+  }
+
+  it('stops every animation under reduced motion, without naming selectors', () => {
+    const blocks = reducedMotionBlocks(journeyCss)
+    expect(blocks.length, 'no reduced-motion block found').toBeGreaterThan(0)
+    const wildcard = blocks.some((b) =>
+      /(^|[\s,{])\*\s*,[\s\S]*?animation:\s*none\s*!important/.test(b),
+    )
+    expect(wildcard, 'no wildcard animation:none rule under reduced motion').toBe(true)
+  })
 })
 
 // CSS is not the only place an animated blur can hide: framer-motion lets a
