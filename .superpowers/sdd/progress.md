@@ -33,3 +33,7 @@ Task 9: complete (commit 5412757, review clean — wildcard animation:none repla
   JS-driven motion handled elsewhere: Starfield still={reduced}, and MotionConfig reducedMotion="user" in App.jsx.
 Task 10: complete (commits 8b199b8, b3aa268, review clean — mobile tier)
   Fixed post-review: .pulsar-beam no longer hidden on phones (my tier was written when it was still blurred; blur is gone, so it is compositor-only and cheap). Cascade collision fixed so reduced-motion opacity wins on phones.
+Task 11: complete (commit 5d0f862 — scripts/audit.js, scripts/audit-static.mjs, npm run audit, docs/VERIFICATION.md)
+Final whole-branch review (opus): no shipped-behaviour defect found; verdict "ready to merge after fixes".
+Final fixes applied (commits 6aa07cd..f241724): jsx test discovery, scene-parking test, deep-link scrollIntoView test, longhand-animation guard, rootMargin assertion, usePin deleted, dead .hero-voyage declarations, .bh-arc now scales with parent, corrected .scn-parked comment, querySelector try/catch, dossier checks in VERIFICATION.md, plan marked executed.
+FINAL STATE: 33 tests / 7 files pass, build clean, npm run audit PASS (0 blur, 0 backdrop-filter, meta parity 13 tags), tree clean, 39 commits on branch.
