@@ -1117,9 +1117,18 @@ html.lenis.lenis-smooth {
     padding-top: 0;
   }
 
+  /* The field is positioned with an explicit `top`, so it ignores
+     .origins-stage's own padding-top entirely (padding only pushes
+     in-flow content, not an absolutely-positioned descendant with a
+     non-auto top). At 7svh (≈57px at 812px tall) it started under the
+     75px fixed HUD bar. Raising the floor to 91px (75px bar + 1rem
+     clearance) fixes that; the height is derived from the same value so
+     the field's bottom edge stays pinned at the original 33svh mark
+     (7svh + 26svh) regardless of where the top lands — that's what
+     preserves the ~3svh gap before .origins-copy at margin-top: 36svh. */
   .origins-stage .meteor-field {
-    top: 7svh;
-    height: 26svh;
+    top: max(7svh, 91px);
+    height: calc(33svh - max(7svh, 91px));
     inset-inline: 0;
     bottom: auto;
   }
@@ -1146,9 +1155,27 @@ html.lenis.lenis-smooth {
     font-size: var(--fs-base);
   }
 
+  /* .beat (the twin-lights supernova/pulsar panels) is `position: absolute;
+     inset: 0`, so — unlike an ordinary flex child — it ignores .scn-stage's
+     own align-items/padding-top completely and centres its grid content
+     against the full, unpadded 100svh stage. That is what put it under the
+     HUD bar. Give it its own top clearance and anchor its content to the
+     top of the padded box instead of the centre, for the same half-vs-whole
+     reason as .reentry-stage above. */
+  .beat {
+    padding-top: max(8svh, 91px);
+    align-content: start;
+  }
+
+  /* align-items: center only ever buys half of a top-padding increase as
+     clearance (the box shrinks and the centre line moves down by half the
+     new padding, not the whole amount) — not enough headroom here given how
+     tall .reentry-stats already runs once it stacks to a single column on
+     phones. flex-start makes the clearance exact: content starts flush at
+     padding-top, independent of how tall it is. */
   .reentry-stage {
-    align-items: center;
-    padding-top: 0;
+    align-items: flex-start;
+    padding-top: max(8svh, 91px);
   }
 
   .sing-stage {
@@ -1179,8 +1206,15 @@ html.lenis.lenis-smooth {
     font-size: var(--fs-xs);
   }
 
-  .moon-1 { right: 4%; }
-  .moon-2 { right: 0; }
+  /* .hud-rail sits at `right: clamp(0.375rem, 1.5vw, 1.125rem)` with 26px
+     dots — at 375px wide that's roughly x 343–369. The mercantile world's
+     award moons hug the right edge by design (moon-2's own base/desktop
+     value is right: -4%, deliberately bleeding off-canvas); their old
+     mobile offsets (4% / 0%, i.e. right edges at x 360 / x 375) land
+     squarely inside that zone. Pulled in to 13% / 11% (right edges at
+     roughly x 326 / x 334) so both clear the rail with room to spare. */
+  .moon-1 { right: 13%; }
+  .moon-2 { right: 11%; }
 
   .hud-rail {
     right: 0.125rem;
@@ -1190,6 +1224,24 @@ html.lenis.lenis-smooth {
   .reentry-stats {
     flex-direction: column;
     gap: var(--s3);
+  }
+
+  /* .home-scn isn't pinned/sticky — it's a tall (min-height: 130svh),
+     normally-scrolling section, and it's the last one on the page, so once
+     the document reaches its max scroll the visible slice is simply
+     whatever sits at the very bottom of it. With justify-content: center,
+     the text group (.home-inner + .home-footer; .earth is position:
+     absolute and takes no part in this) sits centred in that oversized box
+     — and because the box is only modestly taller than the content, the
+     centred position happens to land with the heading essentially flush
+     against the top of that final viewport slice, under the HUD bar.
+     flex-end pins the same content group to the *bottom* of the box
+     instead, right against .home-inner's own large reserved
+     padding-bottom (the earth artwork's lane) — which is exactly where the
+     final scroll position already lands, so the heading now sits well
+     clear of the top edge regardless of exact content height. */
+  .home-scn {
+    justify-content: flex-end;
   }
 
   .home-inner {

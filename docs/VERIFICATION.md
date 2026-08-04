@@ -488,3 +488,43 @@ left between the spring and the now-different scroll feel.
 | 7e | Keyboard scrolling in voyage | `npm run dev` on `/#voyage` | Space/PageDown/PageUp/arrows/Home/End all still work |
 | 7f | Scrollbar dragging in voyage | `npm run dev` on `/#voyage` | Thumb drag tracks without lag or disconnect |
 | 7g | Touch and reduced-motion fall back to native | DevTools device toolbar / Rendering tab | No Lenis glide, no `lenis` class on `<html>`; HUD jumps still land correctly |
+
+---
+
+## 8. Mobile fixes — real device required
+
+The fixes below were built and checked by reading the relevant source files
+and doing the box-model/pixel arithmetic by hand — **not** by looking at a
+rendered phone. This environment's browser pane doesn't composite frames,
+never fires `requestAnimationFrame`, and `window.scrollY` stays `0`, so none
+of the following was seen with eyes. All of it needs a real phone (or, at
+minimum, DevTools' device toolbar with CPU/network throttling and an actual
+touch-capable viewport so `matchMedia('(pointer: coarse)')` reports `true`)
+before this ships.
+
+### 8a. HUD clearance (Problem 1)
+
+On an actual phone at roughly 375×812 (or your own device's size), open
+`/#voyage` and scroll through every scene. For each one, confirm the
+"Résumé view →" button (top-right, `y 16–59`) never sits on top of readable
+text or the meteor/beat graphics:
+
+| Scene | What changed | What to check |
+|---|---|---|
+| origins | `.meteor-field`'s `top` raised from `7svh` to `max(7svh, 91px)`, `height` shortened to keep its bottom edge pinned at the original 33svh mark | First meteor doesn't start under the HUD; no new gap/overlap where the field meets `.origins-copy` |
+| stars (twin lights) | `.beat` (supernova/pulsar panels) gets `padding-top: max(8svh, 91px)` and `align-content: start` instead of centering in the full viewport | Both beat panels (nova+card, pulsar+card) start clear of the HUD; card content isn't pushed off the bottom edge |
+| reentry | `.reentry-stage` switched from `align-items: center; padding-top: 0` to `align-items: flex-start; padding-top: max(8svh, 91px)` | Kicker/heading start clear of the HUD; the three stacked stats and the closing line aren't clipped at the bottom — this is the one most likely to be tight on a short device, since the stats block is tall once it stacks to one column |
+| home | `.home-scn` switched from `justify-content: center` to `justify-content: flex-end` | At the very bottom of the scroll (nothing left to scroll), the heading/contact block sits clear of the HUD, not flush against it. Also confirm the reveal-in-on-scroll animation for this section still triggers normally on the way down (justify-content change shouldn't affect that, but it changes *when* the content becomes visible relative to scroll position, so it's worth a look) |
+| curo / mercantile / vault / porcelain / launch | unchanged | Re-confirm still clear — these were already fine and nothing in this fix touches their rules, but worth a spot check since they share `.scn-stage`'s base rule |
+
+Also check the mercantile world's three award moons (top-right cluster of
+small badges) don't sit under the HUD rail (the column of dots running down
+the right edge) — `.moon-1`/`.moon-2`'s `right` offset moved from `4%`/`0%`
+to `13%`/`11%` to pull them clear of it.
+
+**Devices to test on, if available:** something ~375×812 (matches the
+measurements this fix was based on) and something shorter, ~375×667 (an
+iPhone SE-class device) — none of this fix's new padding values have the
+launch scene's explicit `max-height: 600px` fallback, so a short device is
+the one place this could still be tight, particularly the reentry stats
+block.
