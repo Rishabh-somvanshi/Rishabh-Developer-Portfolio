@@ -203,6 +203,42 @@ Layout: `--container: 68rem`, `--radius: 8px`, `--radius-lg: 12px`,
 `--ease: cubic-bezier(.21,.47,.32,.98)`, the `--s1`…`--s16` spacing scale, and
 the `--fs-*` type scale including `--fs-hero: clamp(2.875rem, 1.6rem + 6.4vw, 5.5rem)`.
 
+### Aesthetic direction (voyage) — "Interstellar"
+
+The voyage should feel smooth and dreamy: slow, weighty, cinematic. This is
+treated as a requirement, not decoration, because it constrains the performance
+work — and conveniently, it points the same way. The expensive effects on the
+page currently read as *busy*, not vast. Fewer, slower, heavier motions are both
+cheaper to render and closer to the target feel.
+
+**Motion language**
+
+- Long durations (2–6 s) and long easing curves. Nothing snappy or bouncy.
+- **Inertial scroll.** Scene progress is damped (lerped toward the raw scroll
+  position) rather than bound 1:1. This is the single largest contributor to the
+  "dreamy" quality and is nearly free — one rAF loop, one interpolated value.
+- Multi-layer parallax for depth, driven only by `translate3d`.
+- Long crossfades between scenes; no abrupt cuts.
+- More negative space and slower reveal timing — vastness reads as silence.
+
+**Palette and light**
+
+- Deeper near-black base; warm amber accretion light against cold cyan-blue,
+  the film's signature contrast.
+- Volumetric glow via pre-baked radial and conic gradients, never `filter: blur()`.
+- A tiled film-grain overlay at low opacity, and a soft vignette. Both are very
+  cheap and do most of the cinematic work.
+- Gargantua: the singularity scene keeps its horizontal accretion disk and gains
+  the signature lensed arc over the top, built from gradients rather than blurs.
+
+**Architecture that serves both goals**
+
+A single rAF "engine" computes the damped scroll progress once per frame and
+writes a small set of CSS custom properties on a root element. Scenes consume
+those variables in CSS. This replaces per-element framer-motion `MotionValue`
+subscriptions — far fewer JS-driven DOM writes per frame, one shared clock for
+every scene, and inertia for free.
+
 ### Performance work (voyage)
 
 Scoped to `src/journey/*.jsx` and `src/styles/journey.css` (21 KB).
@@ -225,6 +261,10 @@ Scoped to `src/journey/*.jsx` and `src/styles/journey.css` (21 KB).
   `backdrop-filter` — matching what the current classic view already achieves.
 - Voyage: no frame longer than 34 ms during a scripted full-page scroll on a
   1280×720 viewport; zero animations running while scrolled past a scene.
+- Voyage: no element has both `filter: blur()` and a running animation.
+- Voyage: scroll-driven motion is damped, not bound 1:1 to raw scroll offset.
+- The rebuilt bundle still builds clean, and the dossier's rendered text content
+  is unchanged from the committed mirror.
 - `prefers-reduced-motion: reduce` disables all non-essential motion in both views.
 - All links resolve 200: résumé PDF, both project sites, LinkedIn, GitHub, mailto.
 - OG/Twitter meta and `og.png` preserved so shared links keep their preview card.
