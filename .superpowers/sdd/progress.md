@@ -12,3 +12,9 @@ Task 4: complete (commit e9a364c, review clean — .hero-voyage button in dossie
   Minor: .mono adds uppercase+weight500 not accounted for in the rule (matches Nav idiom, likely fine — needs a human visual call).
   Minor: .hero-voyage redundantly re-declares font-family/font-size already in .mono.
   Minor: focus indicator is compliant ONLY via the global :focus-visible outline rule (global.css:112). The bespoke colour-only rule would fail SC 1.4.11 alone. Worth a code comment so a refactor cannot silently strip it.
+Task 5: complete (commits 534761a, ff3672c, 1dd5bdf, d43a2f9 — review clean after fidelity fix)
+  Removed ALL blur/backdrop-filter from src/. Also caught beyond the brief: scroll-driven blur in Reentry.jsx (inline style, invisible to CSS guard) and .nav.scrolled backdrop-filter in the DOSSIER nav.
+  Guards now cover journey.css, global.css, and .jsx inline/hook blur — all three verified to fail against injected violations.
+  Minor (final review): guard matches `animation:` shorthand only, would miss longhand animation-name/-duration.
+  Minor (final review): JSX guard misses blur via CSS custom property or style.filter assignment in useEffect.
+  HUMAN VISUAL CHECK NEEDED: .pulsar-beam feather width (3deg) and .bh-lens 2px@0.13 compensation are judgment calls.
