@@ -16,3 +16,6 @@ ziD32jC0
 .superpowers/sdd/*-brief.md
 .superpowers/sdd/*-report.md
 .superpowers/sdd/*.diff
+
+# netlify CLI/deploy scratch
+.netlify/
