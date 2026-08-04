@@ -1238,4 +1238,21 @@
     width: 150px;
     height: 88px;
   }
+
+  /* Phones do the least well with large composited glows, and they are where the
+     lag was most obvious. Drop the widest, softest layers and slow the rest —
+     the scene still reads, at a fraction of the fill cost. */
+  .nova-rays,
+  .pulsar-beam,
+  .bh-lens {
+    display: none;
+  }
+
+  .bh-disk {
+    animation-duration: 26s;
+  }
+
+  .voyage-atmosphere::after {
+    opacity: 0.16;
+  }
 }
