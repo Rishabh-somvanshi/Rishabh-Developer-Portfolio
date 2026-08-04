@@ -30,8 +30,8 @@ function useGlide(raw) {
  * Toggle the parked class on a scene as it enters and leaves view.
  *
  * Applied here rather than in each scene component: all six scenes go through
- * useScene/usePin, and the costliest animations are not in the one component
- * it would be easy to remember to change.
+ * useScene, and the costliest animations are not in the one component it
+ * would be easy to remember to change.
  */
 function useParkWhenOffScreen(ref) {
   useEffect(
@@ -61,15 +61,4 @@ export function useScene(vh) {
     p: useGlide(scrollYProgress),
     height: `${Math.round(vh * (coarse ? 0.74 : 1))}vh`,
   }
-}
-
-/** Raw pinned progress (full height), damped the same way. */
-export function usePin() {
-  const ref = useRef(null)
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start start', 'end end'],
-  })
-  useParkWhenOffScreen(ref)
-  return { ref, p: useGlide(scrollYProgress) }
 }
