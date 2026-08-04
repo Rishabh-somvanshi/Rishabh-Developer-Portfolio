@@ -1165,3 +1165,17 @@
     animation: none !important;
   }
 }
+
+/* A scene scrolled well out of view pays nothing: its animations stop and the
+   browser is free to skip rendering its subtree entirely. contain-intrinsic-size
+   keeps the scroll height stable so parking cannot shift layout. */
+.scn-parked *,
+.scn-parked *::before,
+.scn-parked *::after {
+  animation-play-state: paused !important;
+}
+
+.scn-parked {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100vh;
+}
