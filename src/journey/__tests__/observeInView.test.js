@@ -4,16 +4,19 @@ import { observeInView } from '../observeInView'
 let trigger
 let observed
 let disconnected
+let observerOptions
 
 beforeEach(() => {
   trigger = null
   observed = []
   disconnected = 0
+  observerOptions = null
   vi.stubGlobal(
     'IntersectionObserver',
     class {
-      constructor(cb) {
+      constructor(cb, options) {
         trigger = cb
+        observerOptions = options
       }
       observe(el) {
         observed.push(el)
@@ -51,8 +54,14 @@ describe('observeInView', () => {
     const stop = observeInView(document.createElement('div'), () => {}, {
       rootMargin: '50px',
     })
+    expect(observerOptions).toEqual({ rootMargin: '50px' })
     stop()
     expect(disconnected).toBe(1)
+  })
+
+  it('defaults rootMargin to 200px when no options are given', () => {
+    observeInView(document.createElement('div'), () => {})
+    expect(observerOptions).toEqual({ rootMargin: '200px' })
   })
 
   it('reports visible and no-ops when IntersectionObserver is missing', () => {
