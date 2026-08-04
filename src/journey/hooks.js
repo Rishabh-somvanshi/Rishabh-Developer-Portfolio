@@ -5,11 +5,17 @@ import { observeInView } from './observeInView'
 export const EASE = [0.21, 0.47, 0.32, 0.98]
 
 /**
- * Scroll damping. Heavy and slow on purpose — the voyage should feel like a
- * ship with mass, not a value bound 1:1 to the wheel. Low stiffness plus high
- * damping gives a long, unhurried settle with no overshoot.
+ * Scene-progress damping. The scroll *position* itself is now smoothed by
+ * Lenis (see Journey.jsx) — Lenis supplies the ship-with-mass inertia, this
+ * spring only has to take the remaining edge off the already-smoothed
+ * progress value so it doesn't track pixel-for-pixel. Higher stiffness and
+ * lower mass than before, on purpose: with Lenis already smoothing the
+ * input, a slow/heavy spring stacked on top double-applies inertia and reads
+ * as mushy, laggy motion rather than weight. Do not soften this back toward
+ * low-stiffness/high-mass values without also removing Lenis — the two are
+ * tuned as one system.
  */
-const GLIDE = { stiffness: 42, damping: 22, mass: 1.1, restDelta: 0.0005 }
+const GLIDE = { stiffness: 90, damping: 26, mass: 1, restDelta: 0.0005 }
 
 export const isCoarsePointer = () =>
   typeof window !== 'undefined' &&
