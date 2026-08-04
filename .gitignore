@@ -5,3 +5,9 @@ dist/
 .DS_Store
 *.local
 .vite/
+
+# stray build artifacts recovered alongside the source (all 2026-07-14 builds,
+# none matching the deployed bundle)
+dist-*.zip
+zi5DoJLj
+ziD32jC0
