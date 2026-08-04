@@ -17,6 +17,37 @@ Run `npm run dev` and keep it open for most of these; a couple call for
 
 ---
 
+## 0. Dossier checks (recruiter-facing view — check this first)
+
+The dossier (`mode: 'work'`) is now the default, and its URL is already in
+submitted job applications — a regression here is worse than anything in the
+voyage. `src/lib/viewMode.js` and `src/App.jsx:56-72` are the code driving
+this; `src/lib/__tests__/viewMode.test.js` and `src/__tests__/App.test.jsx`
+cover the pure logic and the deep-link scroll effect under jsdom, but the
+actual rendered behaviour — what a recruiter clicking a link from an
+application actually sees — has not been visually confirmed.
+
+For each row: clear site data (or use a fresh private window) before the
+"cold" loads so `localStorage` starts empty.
+
+| # | Steps | Expected |
+|---|---|---|
+| 0a | Clear `localStorage`. Load `/` | Dossier renders (Hero → Experience → Case Studies → Skills → Contact) |
+| 0b | Clear `localStorage`. Load `/#experience` | Dossier renders, scrolled to the Experience section |
+| 0c | Clear `localStorage`. Load `/#work` | Dossier renders, scrolled to the Case Studies (`#work`) section |
+| 0d | Clear `localStorage`. Load `/#skills` | Dossier renders, scrolled to the Skills section |
+| 0e | Clear `localStorage`. Load `/#contact` | Dossier renders, scrolled to the Contact section |
+| 0f | Clear `localStorage`. Load `/#voyage` | Voyage renders (not the dossier) |
+| 0g | From the dossier, click "Take the voyage" to enter the voyage, then reload bare `/` | Voyage renders again — the choice is remembered via `localStorage` |
+| 0h | From the voyage, exit back to the dossier (skip link or exit control), then reload bare `/` | Dossier renders, and the address bar reads `#overview` |
+| 0i | On the dossier, press Tab repeatedly until the "Take the voyage" control in the hero receives focus | A visible focus ring appears on the control |
+| 0j | With "Take the voyage" focused, press Enter | The voyage opens, same as a click |
+
+If any of 0a–0h show the wrong view, stop — do not deploy — this is the
+exact regression this branch's default-mode flip could introduce.
+
+---
+
 ## 1. DevTools acceptance-criteria audit (`scripts/audit.js`)
 
 `scripts/audit.js` is a console snippet, not a Node script — paste its
@@ -255,7 +286,11 @@ phones, `0.14` under reduced motion) with no blend mode.
 
 **Check:** does the grain still read as texture (good), or does it look too
 flat/weak now compared to what a blended grain would look like (expected
-trade-off, but worth confirming it isn't *invisible*)? The exact rule and
+trade-off, but worth confirming it isn't *invisible*)? **Also check the
+opposite direction:** at `opacity: 0.22` on desktop, does the grain lift the
+blacks enough to hurt legibility of `--text-3` body copy sitting on top of
+it? A too-faint grain is a missed effect; a too-strong one is a readability
+regression — both are worth flagging, not just the first. The exact rule and
 reasoning is documented directly above `.voyage-atmosphere` in
 `src/styles/journey.css`:
 
@@ -291,6 +326,12 @@ order above should prevent both, but this was never visually confirmed.
 
 | # | Check | Needs | Expected |
 |---|---|---|---|
+| 0a | Cold `/`, empty `localStorage` | `npm run dev` | Dossier |
+| 0b–0e | Cold `/#experience`, `/#work`, `/#skills`, `/#contact` | `npm run dev` | Dossier, scrolled to that section |
+| 0f | Cold `/#voyage` | `npm run dev` | Voyage |
+| 0g | Enter voyage, reload bare `/` | `npm run dev` | Voyage (remembered) |
+| 0h | Exit voyage, reload bare `/` | `npm run dev` | Dossier, URL reads `#overview` |
+| 0i–0j | Tab to "Take the voyage", activate with Enter | `npm run dev` | Visible focus ring; Enter opens voyage |
 | 1a | `scripts/audit.js` on `/` | preview build | `infiniteAnimations: 0`, `blurredElements: 0`, `backdropFilters: 0` |
 | 1b | `scripts/audit.js` on `/#voyage` | preview build | `blurredAndAnimated: 0`, `backdropFilters: 0` (infinite non-zero OK) |
 | 2 | Frame-timing snippet on `/#voyage` | visible window | `framesOver34ms: 0` |
@@ -299,5 +340,5 @@ order above should prevent both, but this was never visually confirmed.
 | 5 | 390×844 mobile check | DevTools device toolbar | `.nova-rays`/`.bh-lens` hidden, `.pulsar-beam` visible, disk spins slower |
 | 6a | `.pulsar-beam` feather | Eyes on `/#voyage` | Soft-reading edge; if hard, widen gradient-stop span, not blur |
 | 6b | `.bh-lens` visibility | Eyes on `/#voyage` desktop | Faint but present backdrop ring, or flag as dead weight |
-| 6c | Film grain strength | Eyes on `/#voyage` | Reads as texture; one-line switch documented in `journey.css` if too flat |
+| 6c | Film grain strength | Eyes on `/#voyage` | Reads as texture without hurting `--text-3` legibility; one-line switch documented in `journey.css` if too flat |
 | 6d | Gargantua arc | Eyes on `/#voyage` singularity scene | Bright arc over top of black core, not hidden/disconnected |
