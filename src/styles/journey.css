@@ -247,15 +247,18 @@ html.lenis.lenis-smooth {
    inside that same box, so it never participates in the flex centering;
    nothing previously reserved its lane, which is the root cause of the
    overlap. The cue is ~76px tall and sits `clamp(1.5rem, 5vh, 3rem)` off
-   the bottom, so its lane needs roughly 76px + up to 48px = ~124px at most;
-   clamp(7rem, 16vh, 10rem) (112px–160px) reserves that plus breathing room
-   and scales with viewport height. Below ~600px tall there isn't enough
-   room left for both the centred copy and the cue even with this reserve,
-   so the cue is hidden there instead (see the max-height query below) and
-   this padding is reset to 0 so the copy recentres normally. */
+   the bottom, so the reserve is derived from the cue rather than guessed:
+   its height, plus the exact same clamp() it is positioned by, plus 1.5rem
+   of clearance. Reusing that clamp keeps the gap constant at every viewport
+   height. An independent clamp(7rem, 16vh, 10rem) did not: near 700px tall
+   its 7rem floor and the cue's 5vh offset peaked together and the clearance
+   collapsed to about 1px. Below ~600px tall there isn't enough room for both
+   the centred copy and the cue even with this reserve, so the cue is hidden
+   there instead (see the max-height query below) and this padding is reset
+   to 0 so the copy recentres normally. */
 .launch-stage {
   flex-direction: column;
-  padding-bottom: clamp(7rem, 16vh, 10rem);
+  padding-bottom: calc(76px + clamp(1.5rem, 5vh, 3rem) + 1.5rem);
 }
 
 .launch-copy {
