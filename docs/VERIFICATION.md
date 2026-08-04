@@ -528,3 +528,23 @@ iPhone SE-class device) — none of this fix's new padding values have the
 launch scene's explicit `max-height: 600px` fallback, so a short device is
 the one place this could still be tight, particularly the reentry stats
 block.
+
+### 8b. Scene length / dead scroll (Problem 2)
+
+With a touch-capable viewport (so `useScene`'s `coarse` check is `true`),
+scroll all the way through the voyage and gauge how much of each pinned
+scene's scroll range is spent looking at a screen that isn't visibly
+changing. The fix only changed one number (`0.74` → `0.58` in
+`src/journey/hooks.js`), so this is a feel check, not a correctness check:
+
+- Scenes should still fully play out their content (nothing should feel
+  rushed or cut off) — the transform input ranges (0..1 progress) weren't
+  touched, only how much physical scroll maps to that range.
+- The stretches of "nothing happening" between beats should be noticeably
+  shorter than before, without introducing a new problem where content
+  changes faster than it can be read.
+- If it now feels rushed on a real device, the multiplier is the one knob
+  to retune (raise it back up in small steps); if there's still noticeable
+  dead space, lower it further. Don't touch the per-scene `vh` values or
+  any `useTransform` ranges to fix a feel issue here — see the updated
+  comment on `useScene` for why.

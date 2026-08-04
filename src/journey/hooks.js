@@ -53,6 +53,14 @@ function useParkWhenOffScreen(ref) {
  * Pinned-scene progress, damped so it settles with weight instead of
  * tracking the wheel 1:1. Scene height shrinks on touch so each scene needs
  * less thumb.
+ *
+ * The coarse-pointer multiplier (0.58) is deliberately much more aggressive
+ * than it looks. A pinned scene stays sticky for its *entire* section height
+ * regardless of how much of that height its content actually fills — on a
+ * phone, a screen's worth of extra pinned scroll beyond the content reads as
+ * "nothing is happening," i.e. dead black space between beats. Desktop has
+ * room to spare and keeps the full-length scenes (multiplier 1); phones do
+ * not, so they get materially shorter scenes on purpose.
  */
 export function useScene(vh) {
   const ref = useRef(null)
@@ -65,6 +73,6 @@ export function useScene(vh) {
   return {
     ref,
     p: useGlide(scrollYProgress),
-    height: `${Math.round(vh * (coarse ? 0.74 : 1))}vh`,
+    height: `${Math.round(vh * (coarse ? 0.58 : 1))}vh`,
   }
 }
