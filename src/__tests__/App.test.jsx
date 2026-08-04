@@ -92,4 +92,23 @@ describe('App deep-link scroll on first render', () => {
 
     Element.prototype.scrollIntoView = originalScrollIntoView
   })
+
+  it('does not throw on a malformed hash that is not a valid selector', async () => {
+    // The rAF callback runs on jsdom's internal timer loop, not inside this
+    // test's call stack, so a thrown SyntaxError wouldn't be caught by a
+    // try/expect around render() — it surfaces as a window 'error' event
+    // instead. Listen for that directly.
+    const onError = vi.fn()
+    window.addEventListener('error', onError)
+
+    setHash('#utm_source=x')
+    render(<App />)
+    await flushRaf()
+    // Let jsdom's error-reporting microtask/macrotask settle.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(onError).not.toHaveBeenCalled()
+
+    window.removeEventListener('error', onError)
+  })
 })

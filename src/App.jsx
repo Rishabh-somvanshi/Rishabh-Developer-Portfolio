@@ -63,7 +63,13 @@ export default function App() {
       const { hash } = window.location
       if (mode === 'work' && hash && hash !== '#overview') {
         requestAnimationFrame(() => {
-          document.querySelector(hash)?.scrollIntoView()
+          try {
+            document.querySelector(hash)?.scrollIntoView()
+          } catch {
+            /* malformed hash (e.g. #utm_source=x, #!x) is not a valid
+               selector — ignore it rather than throw inside the rAF
+               callback */
+          }
         })
       }
       return
