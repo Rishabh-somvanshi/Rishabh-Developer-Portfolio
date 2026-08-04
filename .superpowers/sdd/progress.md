@@ -21,3 +21,6 @@ Task 5: complete (commits 534761a, ff3672c, 1dd5bdf, d43a2f9 — review clean af
 Task 6: complete (commit 8473df9, review clean — observeInView + parking in useScene/usePin, .scn-parked CSS)
   All six scenes covered via the shared hook (verified by reading each component, not the report).
   Minor (final review): no test asserts useScene/usePin actually call useParkWhenOffScreen — dropping that call would pass the suite.
+Task 7: complete (commit 6159ffc, review clean — useSpring damping via useGlide; parking preserved)
+  Spring is overdamped (ratio ~1.62), settles without oscillation. GLIDE feel unverified — needs human scroll test.
+  Minor (final review): useSpring is created+subscribed even for reduced-motion users, doing discarded per-frame work for the people who asked for less. Rules of Hooks forces the unconditional call; worth a comment.
