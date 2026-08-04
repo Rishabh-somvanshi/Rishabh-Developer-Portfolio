@@ -24,3 +24,8 @@ Task 6: complete (commit 8473df9, review clean — observeInView + parking in us
 Task 7: complete (commit 6159ffc, review clean — useSpring damping via useGlide; parking preserved)
   Spring is overdamped (ratio ~1.62), settles without oscillation. GLIDE feel unverified — needs human scroll test.
   Minor (final review): useSpring is created+subscribed even for reduced-motion users, doing discarded per-frame work for the people who asked for less. Rules of Hooks forces the unconditional call; worth a comment.
+Task 8: complete (commits fc1b2cb, 128ae31 — grain/vignette/Gargantua arc; blend mode dropped for perf)
+  bh-arc placed after bh-core (deviates from brief) — correct: core radius ~88px > arc semi-minor 58px, so arc peak would be hidden otherwise.
+  Grain now plain opacity on ::after (0.22), vignette full strength on element. Restore switch documented in CSS comment.
+  HUMAN CHECK: grain may now read too faint; one-line switch documented in journey.css above .voyage-atmosphere.
+  Minor: report overstated that the brief authorised the DOM-order deviation (it did not; the deviation was still right).
