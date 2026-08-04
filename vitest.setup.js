@@ -4,6 +4,21 @@
 // Storage-like polyfill for the duration of the test run.
 import { afterEach } from 'vitest'
 
+// jsdom has no ResizeObserver at all (unlike IntersectionObserver, which
+// individual test files already stub where they need it — see
+// useScene.test.jsx and App.test.jsx). Lenis's Dimensions class
+// (node_modules/lenis) constructs one unconditionally, so any test that
+// mounts the voyage (Journey.jsx initialises Lenis in an effect) throws
+// "ResizeObserver is not defined" without this. A minimal no-op stub is
+// enough — no test asserts on resize behaviour.
+if (typeof window !== 'undefined' && typeof window.ResizeObserver === 'undefined') {
+  window.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+}
+
 if (typeof window !== 'undefined') {
   // Object.create(null) avoids prototype-pollution collisions (e.g. keys
   // named "__proto__" or "toString" would otherwise resolve against

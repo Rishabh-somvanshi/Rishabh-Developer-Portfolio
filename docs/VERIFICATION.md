@@ -132,29 +132,39 @@ most likely offender since it stacks the most layers (`bh-disk`, `bh-photon`,
 
 ## 3. Scroll-damping feel check
 
+**As of the Lenis change below, this is no longer the whole story** — the
+scroll *position* is now smoothed by Lenis, and this spring only takes the
+remaining edge off. Read §7 first if you're checking a fresh build; this
+section covers the spring in isolation.
+
 `src/journey/hooks.js` drives every pinned scene's scroll progress through a
 spring (`useGlide`), controlled by the `GLIDE` constant:
 
 ```js
-const GLIDE = { stiffness: 42, damping: 22, mass: 1.1, restDelta: 0.0005 }
+const GLIDE = { stiffness: 90, damping: 26, mass: 1, restDelta: 0.0005 }
 ```
 
 1. `npm run dev`, open `http://localhost:5173/#voyage`.
 2. Scroll with a mouse wheel in short bursts (a few notches, then stop).
 3. **Expected feel:** planets/cards keep drifting into their final position
-   for a beat *after* the wheel stops — that's the spring settling. It
-   should feel like a ship with mass, not 1:1 with the wheel, and it should
-   **not** overshoot/bounce past the resting point.
-4. **If it feels sluggish or laggy** (takes too long to start responding):
-   raise `stiffness` toward `55` in `src/journey/hooks.js`. Higher stiffness
-   = faster catch-up to the scroll target.
+   for a brief beat *after* the wheel stops — that's the spring taking the
+   edge off Lenis's already-smoothed scroll. It should read as a quick,
+   crisp settle, not a long drift — the long, heavy drift is now Lenis's job
+   (§7), not this spring's. It should **not** overshoot/bounce past the
+   resting point either way.
+4. **If it feels mushy or laggy** (motion trails noticeably behind the
+   already-smoothed scroll, or the whole thing feels like it has two
+   separate lags stacked on top of each other): that's the double-inertia
+   problem this retune exists to avoid. Raise `stiffness` further (try
+   `110`–`130`) and/or drop `mass` is already at its practical floor of `1`.
 5. **If it wobbles or overshoots** (visibly bounces past the resting point
-   before settling): raise `damping` above `22`. The intent is *no visible
+   before settling): raise `damping` above `26`. The intent is *no visible
    overshoot* — a bounce means damping is too low relative to
    stiffness/mass.
 6. Also try touch/coarse-pointer scrolling if you have a touchscreen or
-   trackpad available — this was only manually verified with a mouse wheel
-   in prior task work.
+   trackpad available — Lenis is gated off on coarse pointers (§7), so this
+   spring is the *only* smoothing touch users get; confirm it doesn't feel
+   undersmoothed there compared to the Lenis-assisted desktop feel.
 
 ---
 
@@ -322,6 +332,135 @@ order above should prevent both, but this was never visually confirmed.
 
 ---
 
+## 7. Lenis smooth scroll (this branch)
+
+This branch adds [Lenis](https://github.com/darkroomengineering/lenis) to
+smooth the voyage's actual scroll *position*, on top of the existing scene-
+progress spring (§3). `src/journey/Journey.jsx` initialises it inside an
+effect and destroys it on unmount; `src/journey/Hud.jsx` routes its two
+programmatic-scroll buttons (the rail dots' `goTo`, and the logo's "back to
+launch") through it via `src/journey/lenisController.js` instead of native
+`window.scrollTo({ behavior: 'smooth' })`. None of this can be observed in
+the browser automation pane used to build this branch — `requestAnimationFrame`
+never fires there and `window.scrollY` stays `0` regardless of what the code
+does, so the checks below were **not** run and must be done by a human.
+
+### 7a. Voyage scroll glides and settles
+
+1. `npm run dev`, open `http://localhost:5173/#voyage`.
+2. Scroll with a mouse wheel — a few fast notches, then stop.
+3. **Expected:** the page keeps gliding for a short beat after the wheel
+   stops, with no snapping or hard stop, and no perceptible double-lag (the
+   scene-progress spring in §3 was retuned specifically so its motion
+   doesn't stack visibly on top of Lenis's — if you can see two distinct
+   settles at different speeds, something's off).
+4. Try holding the wheel scrolling continuously across several scenes —
+   should stay smooth the whole way, no stutter at scene boundaries.
+
+### 7b. Dossier still scrolls natively
+
+1. Load `/` (not `/#voyage`).
+2. Open DevTools → Elements, inspect `<html>`. **Expected:** no `lenis` or
+   `lenis-smooth` class ever appears on it, on this page, at any point —
+   those classes are Lenis's own markers and should only exist during an
+   active voyage session. Scroll the dossier — it should feel exactly as it
+   did before this branch (instant, native, no glide).
+3. In the Network tab (or Sources), confirm no `lenis` chunk is fetched
+   before the voyage is entered — Journey.jsx (and therefore its `import
+   Lenis from 'lenis'`) is only reached once `mode === 'voyage'`, but this is
+   worth a direct look rather than trusting the code path.
+
+### 7c. Leaving the voyage restores native scrolling
+
+1. Enter the voyage (`/#voyage` or "Take the voyage" from the dossier).
+2. Scroll partway in, confirm the glide from §7a.
+3. Exit back to the dossier (skip link or the exit control).
+4. **Expected:** scrolling the dossier afterward is instant/native again —
+   no residual glide, no leftover `lenis`/`lenis-smooth` class on `<html>`
+   (check DevTools again). This confirms the `lenis.destroy()` cleanup in
+   `Journey.jsx`'s effect actually ran on unmount.
+5. Re-enter the voyage again after that and confirm it re-initialises
+   cleanly (glide is back) — this exercises mount → unmount → remount, not
+   just a single mount.
+
+### 7d. HUD rail dots and logo button
+
+1. In the voyage, click a few of the progress-rail dots on the right edge
+   (out of order — e.g. jump straight to "Singularity" from "Launch").
+2. **Expected:** each jump glides via Lenis to land in the right place (the
+   same target position `goTo` computed before this branch — the destination
+   math didn't change, only how the scroll gets there) — no instant jump, no
+   fighting/stutter between two competing scroll animations.
+3. Click the `rs.` logo button (top-left, "back to launch").
+4. **Expected:** glides back to the top the same way.
+5. While a rail-dot glide is still in flight, click a different dot.
+   **Expected:** it retargets smoothly to the new destination rather than
+   finishing the old scroll first or jumping.
+
+### 7e. Keyboard scrolling still works
+
+With the voyage loaded and no input focused elsewhere:
+
+1. Press **Space** / **Page Down** — page should scroll down roughly a
+   viewport (Lenis wraps native scroll rather than replacing it, so this is
+   expected to keep working, but confirm directly).
+2. Press **Page Up** — scrolls back up.
+3. Press **Arrow Down** / **Arrow Up** repeatedly — small increments, same
+   direction sense as before.
+4. Press **Home** — jumps to the very top (launch).
+5. Press **End** — jumps to the very bottom (home/outro).
+6. Tab to one of the HUD rail-dot buttons and press **Enter**/**Space** —
+   should trigger the same glide as a click (§7d).
+
+### 7f. Scrollbar dragging
+
+1. Drag the browser's scrollbar thumb up and down.
+2. **Expected:** the page tracks the drag without fighting it — Lenis should
+   not make scrollbar dragging feel laggy, jumpy, or disconnected from the
+   thumb position.
+
+### 7g. Touch and reduced-motion both fall back to native
+
+1. **Touch:** DevTools device toolbar → any touch-capable device preset (or
+   a real touchscreen/trackpad reporting `pointer: coarse`), reload
+   `/#voyage`. Scroll. **Expected:** ordinary touch/trackpad momentum
+   scrolling, no Lenis glide layered on top — check `<html>` in Elements and
+   confirm it never gets a `lenis` class here. The scene-progress spring
+   (§3) still applies; only the scroll-position smoothing is skipped.
+2. **Reduced motion:** DevTools → `Cmd/Ctrl+Shift+P` → "Rendering" → emulate
+   `prefers-reduced-motion: reduce`, reload `/#voyage` (fresh load — the
+   gate is read once at mount). Scroll. **Expected:** native instant scroll,
+   no glide, and again no `lenis` class on `<html>`. Combined with §4, this
+   confirms reduced-motion strips out both the spring's drift and Lenis's
+   glide, not just one of the two.
+3. For both cases, click a HUD rail dot (§7d) and confirm it still jumps to
+   the right place — `lenisController.scrollTo` falls back to native
+   `window.scrollTo({ behavior: 'smooth' })` when no Lenis instance is
+   registered, so it should still land correctly, just without the Lenis
+   feel.
+
+### If it feels wrong
+
+Two independent knobs, tune the one that matches the symptom:
+
+- **`GLIDE` in `src/journey/hooks.js`** — controls how the *scene-progress*
+  spring (planets, cards, parallax) trails the now-smoothed scroll position.
+  See §3 above for specific stiffness/damping guidance.
+- **Lenis's own options in `src/journey/Journey.jsx`** (currently `new
+  Lenis()` with all defaults — `duration: 1.2`s, `lerp: 0.1`, `wheelMultiplier:
+  1`, etc.) — controls the *scroll position* glide itself. If the page-level
+  glide feels too slow/heavy, lower `duration` or raise `lerp` (they're
+  alternatives — the README notes `duration` is ignored once `lerp` is set);
+  if it feels too twitchy/fast, do the opposite. See the [Lenis
+  README](https://github.com/darkroomengineering/lenis#settings) (also
+  vendored at `node_modules/lenis/README.md`) for the full options table.
+
+If both feel off at once, tune Lenis first (it's now the primary source of
+inertia) and only touch `GLIDE` afterward for whatever residual mismatch is
+left between the spring and the now-different scroll feel.
+
+---
+
 ## Summary table
 
 | # | Check | Needs | Expected |
@@ -335,10 +474,17 @@ order above should prevent both, but this was never visually confirmed.
 | 1a | `scripts/audit.js` on `/` | preview build | `infiniteAnimations: 0`, `blurredElements: 0`, `backdropFilters: 0` |
 | 1b | `scripts/audit.js` on `/#voyage` | preview build | `blurredAndAnimated: 0`, `backdropFilters: 0` (infinite non-zero OK) |
 | 2 | Frame-timing snippet on `/#voyage` | visible window | `framesOver34ms: 0` |
-| 3 | Scroll-damping feel | `npm run dev` | Weighty settle, no overshoot; tune `GLIDE` in `src/journey/hooks.js` if not |
+| 3 | Scroll-damping feel (spring only, now paired with Lenis — see §7) | `npm run dev` | Crisp settle, no overshoot; tune `GLIDE` in `src/journey/hooks.js` if not |
 | 4 | Reduced-motion emulation | DevTools Rendering tab | Nothing animates |
 | 5 | 390×844 mobile check | DevTools device toolbar | `.nova-rays`/`.bh-lens` hidden, `.pulsar-beam` visible, disk spins slower |
 | 6a | `.pulsar-beam` feather | Eyes on `/#voyage` | Soft-reading edge; if hard, widen gradient-stop span, not blur |
 | 6b | `.bh-lens` visibility | Eyes on `/#voyage` desktop | Faint but present backdrop ring, or flag as dead weight |
 | 6c | Film grain strength | Eyes on `/#voyage` | Reads as texture without hurting `--text-3` legibility; one-line switch documented in `journey.css` if too flat |
 | 6d | Gargantua arc | Eyes on `/#voyage` singularity scene | Bright arc over top of black core, not hidden/disconnected |
+| 7a | Voyage scroll glides and settles | `npm run dev` | Smooth glide after wheel stops, no double-lag against §3's spring |
+| 7b | Dossier still scrolls natively | `npm run dev` on `/` | No `lenis`/`lenis-smooth` class on `<html>`; no Lenis chunk fetched before voyage entry |
+| 7c | Exiting voyage restores native scroll | `npm run dev`, enter then exit voyage | No residual glide or `lenis` class after exit; re-entry re-initialises cleanly |
+| 7d | HUD rail dots / logo button | `npm run dev` on `/#voyage` | Glides to target via Lenis; re-target mid-glide works, no fight/stutter |
+| 7e | Keyboard scrolling in voyage | `npm run dev` on `/#voyage` | Space/PageDown/PageUp/arrows/Home/End all still work |
+| 7f | Scrollbar dragging in voyage | `npm run dev` on `/#voyage` | Thumb drag tracks without lag or disconnect |
+| 7g | Touch and reduced-motion fall back to native | DevTools device toolbar / Rendering tab | No Lenis glide, no `lenis` class on `<html>`; HUD jumps still land correctly |

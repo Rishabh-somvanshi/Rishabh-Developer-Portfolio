@@ -11,7 +11,7 @@ export const EASE = [0.21, 0.47, 0.32, 0.98]
  */
 const GLIDE = { stiffness: 42, damping: 22, mass: 1.1, restDelta: 0.0005 }
 
-const isCoarsePointer = () =>
+export const isCoarsePointer = () =>
   typeof window !== 'undefined' &&
   window.matchMedia &&
   window.matchMedia('(pointer: coarse)').matches

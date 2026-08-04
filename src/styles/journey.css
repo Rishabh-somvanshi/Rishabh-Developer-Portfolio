@@ -3,6 +3,40 @@
    Same tokens as global.css; amber stays the only accent.
    ============================================================ */
 
+/* ---------- Lenis (voyage-only smooth scroll) ----------
+   src/journey/Journey.jsx initialises a Lenis instance for the voyage only,
+   gated off for prefers-reduced-motion and coarse pointers (see the effect
+   there) — the dossier never mounts Journey, so it never loads Lenis and
+   these classes never land on its markup.
+
+   These are the rules the installed package (node_modules/lenis@1.3.25,
+   see node_modules/lenis/dist/lenis.css) documents as required, copied
+   rather than imported so the whole voyage stylesheet stays one file:
+     - html.lenis needs height: auto so nothing constrains the scrollable
+       height Lenis measures.
+     - .lenis.lenis-smooth needs pointer-events disabled on iframes, since
+       Lenis can't smooth-scroll over one that's eating the wheel event.
+   One addition beyond the package's own stylesheet: global.css sets
+   `html { scroll-behavior: smooth }` site-wide for the dossier's anchor
+   links. That fights Lenis, which repaints scroll position itself every
+   frame — each of those writes would otherwise re-trigger the browser's
+   own CSS smoothing on top of Lenis's, producing stutter instead of the
+   single smooth motion either one produces alone. Overriding it back to
+   auto only while .lenis-smooth is present keeps the dossier's CSS
+   smooth-scroll untouched. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+html.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
 .journey {
   position: relative;
   background: var(--bg);

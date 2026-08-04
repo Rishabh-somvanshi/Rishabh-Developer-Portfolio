@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { scrollTo as lenisScrollTo } from './lenisController'
 
 export const SCENES = [
   { id: 'launch', label: 'Launch' },
@@ -50,7 +51,11 @@ export default function Hud({ onSkip }) {
     // land where the scene's content is already on stage, not at its blank start
     const pinned = Math.max(el.offsetHeight - window.innerHeight, 0)
     const top = id === 'home' ? el.offsetTop : el.offsetTop + pinned * 0.3
-    window.scrollTo({ top, behavior: 'smooth' })
+    // Native `behavior: 'smooth'` fights Lenis's own per-frame scroll writes
+    // and either jumps or stutters; route through Lenis when it's running,
+    // falling back to native smooth scroll when it isn't (reduced motion,
+    // touch, or a click that races the voyage's init effect).
+    lenisScrollTo(top)
   }
 
   return (
@@ -58,7 +63,7 @@ export default function Hud({ onSkip }) {
       <div className="hud-top">
         <button
           className="nav-logo hud-logo"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => lenisScrollTo(0)}
           aria-label="Back to launch"
           type="button"
         >
