@@ -37,3 +37,9 @@ Task 11: complete (commit 5d0f862 — scripts/audit.js, scripts/audit-static.mjs
 Final whole-branch review (opus): no shipped-behaviour defect found; verdict "ready to merge after fixes".
 Final fixes applied (commits 6aa07cd..f241724): jsx test discovery, scene-parking test, deep-link scrollIntoView test, longhand-animation guard, rootMargin assertion, usePin deleted, dead .hero-voyage declarations, .bh-arc now scales with parent, corrected .scn-parked comment, querySelector try/catch, dossier checks in VERIFICATION.md, plan marked executed.
 FINAL STATE: 33 tests / 7 files pass, build clean, npm run audit PASS (0 blur, 0 backdrop-filter, meta parity 13 tags), tree clean, 39 commits on branch.
+
+MERGED to main (f4711c2) and DEPLOYED to Netlify production 2026-08-04.
+  Deploy id 6a71be51c98ec3788c6f8a82 (build id ...a80). Site converted from drag-and-drop to a real Netlify build (netlify.toml: npm run build -> dist).
+  Rollback target if ever needed: previous live deploy 6a579a0ae8a9feae7900273f (permalink stays up permanently).
+  LIVE VERIFIED: bundle byte-identical to local build (sha d70b1d1f...); / -> dossier (0 infinite anims, 0 blur, 0 backdrop-filter); /#voyage -> voyage, 10 scenes, atmosphere + bh-arc, 0 blur, 0 blurred-and-animated, 0 backdrop-filter; /#experience -> dossier with all 5 anchors; 13 meta tags intact; resume/og/favicon all 200.
+  NOT verifiable in this environment: frame timing, runtime scene parking (IntersectionObserver never fires without compositing), and every visual judgement. See docs/VERIFICATION.md.
