@@ -1249,6 +1249,89 @@ html.lenis.lenis-smooth {
   }
 }
 
+/* .reentry-stage and .beat both reserve max(8svh, 91px) of padding-top above
+   (see the comments on those rules) to clear the fixed HUD bar — that
+   clearance is non-negotiable, it's what stops the "Résumé view →" button
+   overlapping the copy. But .scn-stage is `height: 100svh; overflow: hidden`
+   with no scroll fallback, and on a short phone (an iPhone SE-class 375×667,
+   or any taller device where iOS Safari's `svh` shrinks below `innerHeight`
+   while the URL bar is showing) the stacked content below that padding can
+   run out of room, so it gets silently clipped instead of scrolling into
+   view — the stats/closing line on re-entry, the card copy on twin-lights.
+   `max-height: 700px` catches 667px devices and the shrunk-svh case on
+   taller ones without touching anything at normal phone heights (~760px+)
+   or on desktop, since it's ANDed with the same max-width: 560px scope as
+   the block above. Every rule here only tightens spacing/type or trims
+   secondary copy — none of it touches the HUD clearance itself. */
+@media (max-width: 560px) and (max-height: 700px) {
+  /* Buys back ~98px in the re-entry stack: the collapsed margin between the
+     heading and the stats block drops from 48px to 24px, the gap between
+     stacked stats drops from 24px to 16px (2 gaps = 16px), and the stat
+     numbers themselves lose ~11.5px of height each (34.5px across 3) —
+     still clearly the biggest thing on the screen, just not 50.7px tall.
+     See docs/VERIFICATION.md §8a for the recomputed content total. */
+  .reentry-stats {
+    margin: var(--s3) 0;
+    gap: var(--s2);
+  }
+
+  .reentry-val {
+    font-size: clamp(2.25rem, 1.75rem + 3vw, 3.25rem);
+  }
+
+  /* Twin-lights (.beat) is the same shape as re-entry but with a card's
+     worth of copy instead of three stats, so line-count is much less
+     predictable (paragraph reflow, not fixed short strings). Rather than
+     guess exact wrap counts, this makes the tall parts deterministic: the
+     nova/pulsar artwork gets a real width cap instead of a 220px floor, the
+     study copy is clamped to 2 lines instead of trusting it to wrap short,
+     and the secondary "outcome" line — genuinely secondary once the tagline
+     and headline stat already carry the point — is dropped rather than left
+     to wrap unpredictably. Everything else is just the same margin trim as
+     above (16px reserves down to 8px). */
+  .beat .world-visual {
+    margin-bottom: var(--s1);
+  }
+
+  .beat .nova,
+  .beat .pulsar {
+    width: clamp(140px, 26vw, 380px);
+  }
+
+  .study-card-j .world-h {
+    margin-top: var(--s1);
+  }
+
+  .study-card-j .world-log {
+    margin-top: var(--s1);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .study-card-j .scene-body.sm {
+    margin-top: var(--s1);
+  }
+
+  .study-card-j .scene-body.sm.dim {
+    display: none;
+  }
+
+  .study-card-j .world-tags {
+    margin-top: var(--s1);
+  }
+
+  .study-card-j .world-tags .tag:nth-child(n + 3) {
+    display: none;
+  }
+
+  .study-card-j .link-arrow {
+    margin-top: var(--s1);
+  }
+}
+
 @media (max-height: 700px) {
   .manifest .scene-h.sm,
   .manifest-domains {

@@ -529,6 +529,53 @@ launch scene's explicit `max-height: 600px` fallback, so a short device is
 the one place this could still be tight, particularly the reentry stats
 block.
 
+### 8a-1. Short-phone follow-up: `.reentry-stage` / `.beat` content vs the HUD reserve
+
+A later review did the box-model arithmetic §8a above flagged as a risk and
+found it was real: at 375×667 the `.reentry-stage` content stack (kicker +
+heading + 3 stacked stats + closing line) ran to roughly **551px** against a
+`667 − 91 = 576px` box — only ~25px of slack — and iOS Safari's `svh` unit
+shrinks below raw `innerHeight` by 40–60px while the URL bar is showing,
+which a pessimistic **375×610** case approximates: `610 − 91 = 519px`
+available against that same ~551px, i.e. **clipped by ~32px**. Because
+`.scn-stage` is `overflow: hidden` with no scroll fallback, that's silent
+loss of the years-of-experience / client / awards stats or the closing
+line — not a visual glitch, missing content.
+
+The fix adds `@media (max-width: 560px) and (max-height: 700px)` in
+`src/styles/journey.css` (ANDed with the width so it can't reach desktop or
+the dossier), tightening `.reentry-stats`' margin and gap and shrinking
+`.reentry-val`'s font size — **without** reducing either selector's
+`padding-top: max(8svh, 91px)` HUD reserve. Recomputed re-entry total:
+**~453px**, giving **~123px slack at 375×667** and **~66px slack at the
+pessimistic 375×610**.
+
+`.beat` (the twin-lights supernova/pulsar panels) is the same shape —
+~91px padding-top plus a stacked visual + study-card copy — but its content
+is paragraph text rather than fixed short strings, so exact wrap counts
+can't be pinned down without a renderer. The fix leans on the parts that
+*can* be made exact instead of guessing: the nova/pulsar artwork gets a real
+width cap (`clamp(140px, 26vw, 380px)`, down from a 220px floor at this
+width), `.study-card-j .world-log` is clamped to 2 lines via
+`-webkit-line-clamp`, the secondary "outcome" sentence is dropped
+(`.study-card-j .scene-body.sm.dim { display: none }`), the tag row is
+capped to 2 tags, and every 16px spacing reserve in the card drops to 8px.
+Worst-case estimate (tagline wraps 3 lines instead of the more likely 2):
+content ≈493px, giving **~83px slack at 375×667** and **~26px slack at
+375×610**. Most-likely case (tagline wraps 2 lines): ≈470px, ~106px / ~49px
+slack respectively.
+
+Because the `.beat` estimate has more inherent uncertainty than
+`.reentry-stage`'s (real paragraph reflow vs. fixed-length strings and a
+known heading line count), this is still worth a specific look on a real
+short device (or DevTools' device toolbar at 375×610–667 with a touch
+viewport): confirm neither beat panel's outcome sentence was expected to
+stay visible, and that the study copy reads cleanly truncated to 2 lines
+rather than mid-word. If it looks wrong in practice, the levers to
+loosen first are the `-webkit-line-clamp: 2` (relax to 3) and the tag cap
+(`nth-child(n + 3)` → `n + 4`) — not the `padding-top` HUD reserve on either
+selector, which must stay at `max(8svh, 91px)`.
+
 ### 8b. Scene length / dead scroll (Problem 2)
 
 With a touch-capable viewport (so `useScene`'s `coarse` check is `true`),
