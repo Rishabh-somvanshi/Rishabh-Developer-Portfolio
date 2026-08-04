@@ -8,8 +8,11 @@ import { dirname, join, relative, extname } from 'node:path'
 // URL (e.g. http://localhost:3000/...) instead of a file path, which breaks
 // readFileSync in the jsdom test environment. Resolving via node:path avoids
 // the special-cased syntax.
-const cssPath = join(dirname(fileURLToPath(import.meta.url)), '../journey.css')
-const css = readFileSync(cssPath, 'utf8')
+const journeyCssPath = join(dirname(fileURLToPath(import.meta.url)), '../journey.css')
+const journeyCss = readFileSync(journeyCssPath, 'utf8')
+
+const globalCssPath = join(dirname(fileURLToPath(import.meta.url)), '../global.css')
+const globalCss = readFileSync(globalCssPath, 'utf8')
 
 /** Split a stylesheet into { selector, body } pairs, ignoring at-rule preludes. */
 function rules(source) {
@@ -24,19 +27,25 @@ function rules(source) {
   return out
 }
 
-describe('journey.css paint cost', () => {
-  it('never animates a blurred element', () => {
-    const offenders = rules(css)
+describe('paint cost in stylesheets', () => {
+  it('never animates a blurred element in journey.css', () => {
+    const offenders = rules(journeyCss)
       .filter((r) => /filter:\s*[^;]*blur\(/.test(r.body) && /animation:/.test(r.body))
       .map((r) => r.selector)
     expect(offenders).toEqual([])
   })
 
-  it('does not use backdrop-filter', () => {
-    const offenders = rules(css)
+  it('does not use backdrop-filter in journey.css or global.css', () => {
+    const journeyOffenders = rules(journeyCss)
       .filter((r) => /backdrop-filter:/.test(r.body))
-      .map((r) => r.selector)
-    expect(offenders).toEqual([])
+      .map((r) => `journey.css: ${r.selector}`)
+
+    const globalOffenders = rules(globalCss)
+      .filter((r) => /backdrop-filter:/.test(r.body))
+      .map((r) => `global.css: ${r.selector}`)
+
+    const allOffenders = [...journeyOffenders, ...globalOffenders]
+    expect(allOffenders).toEqual([])
   })
 })
 

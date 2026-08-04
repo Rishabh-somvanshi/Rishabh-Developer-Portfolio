@@ -259,9 +259,7 @@ section {
 }
 
 .nav.scrolled {
-  background: rgba(10, 10, 11, 0.82);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(10, 10, 11, 0.94);
   border-bottom-color: var(--border);
 }
 
