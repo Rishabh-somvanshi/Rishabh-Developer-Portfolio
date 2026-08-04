@@ -134,9 +134,7 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--radius);
   padding: 0.625rem 1.125rem;
-  background: rgba(17, 17, 19, 0.78);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(17, 17, 19, 0.94);
   transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
 }
 
@@ -327,7 +325,6 @@
   height: 2.5px;
   border-radius: 2px;
   background: linear-gradient(to left, rgba(237, 237, 239, 0.9), rgba(237, 237, 239, 0));
-  filter: blur(0.4px);
 }
 
 .meteor-head {
@@ -568,7 +565,6 @@
   width: 26%;
   aspect-ratio: 1;
   background: radial-gradient(circle, #fff7ea 0%, #f5a93d 34%, rgba(232, 148, 42, 0.25) 68%, transparent 100%);
-  filter: blur(1px);
   box-shadow: 0 0 60px 18px rgba(232, 148, 42, 0.35);
 }
 
@@ -633,11 +629,22 @@
   aspect-ratio: 1;
   background: conic-gradient(
     from 0deg,
-    rgba(245, 169, 61, 0.5) 0deg 10deg, transparent 14deg 180deg,
-    rgba(245, 169, 61, 0.5) 180deg 190deg, transparent 194deg 360deg
+    transparent 0deg,
+    rgba(237, 237, 239, 0) 12deg,
+    rgba(237, 237, 239, 0.16) 26deg,
+    rgba(237, 237, 239, 0.34) 45deg,
+    rgba(237, 237, 239, 0.16) 64deg,
+    rgba(237, 237, 239, 0) 78deg,
+    transparent 180deg,
+    rgba(237, 237, 239, 0) 192deg,
+    rgba(237, 237, 239, 0.16) 206deg,
+    rgba(237, 237, 239, 0.34) 225deg,
+    rgba(237, 237, 239, 0.16) 244deg,
+    rgba(237, 237, 239, 0) 258deg,
+    transparent 360deg
   );
-  filter: blur(3px);
   animation: spin 3.2s linear infinite;
+  will-change: transform;
 }
 
 .pulsar-ping {
@@ -692,7 +699,6 @@
   width: 56%;
   aspect-ratio: 1;
   border: 2px solid rgba(245, 169, 61, 0.9);
-  filter: blur(1px);
   box-shadow: 0 0 24px 4px rgba(232, 148, 42, 0.45), inset 0 0 18px rgba(232, 148, 42, 0.35);
 }
 
@@ -701,23 +707,23 @@
   aspect-ratio: 1;
   transform: rotateX(72deg);
   background: conic-gradient(
-    from 40deg,
+    from 0deg,
     rgba(232, 148, 42, 0) 0deg,
-    rgba(232, 148, 42, 0.18) 60deg,
-    rgba(245, 169, 61, 0.75) 150deg,
-    rgba(255, 214, 156, 0.9) 195deg,
-    rgba(232, 148, 42, 0.3) 280deg,
+    rgba(232, 148, 42, 0.34) 40deg,
+    rgba(255, 214, 148, 0.72) 92deg,
+    rgba(245, 169, 61, 0.5) 150deg,
+    rgba(232, 148, 42, 0.16) 220deg,
+    rgba(232, 148, 42, 0.42) 300deg,
     rgba(232, 148, 42, 0) 360deg
   );
-  filter: blur(5px);
   animation: spin 14s linear infinite;
+  will-change: transform;
 }
 
 .bh-lens {
   width: 96%;
   aspect-ratio: 1;
   border: 1px solid rgba(245, 169, 61, 0.22);
-  filter: blur(2px);
   transform: rotate(-16deg) scaleY(0.55);
 }
 
@@ -924,8 +930,13 @@
   top: 0.5rem;
   width: 70vw;
   height: 8rem;
-  background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(232, 148, 42, 0.4), transparent 75%);
-  filter: blur(2px);
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 100%,
+    rgba(232, 148, 42, 0.4) 0%,
+    rgba(232, 148, 42, 0.22) 38%,
+    rgba(232, 148, 42, 0.08) 60%,
+    transparent 78%
+  );
 }
 
 .earth-lights {
