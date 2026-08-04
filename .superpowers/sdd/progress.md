@@ -29,3 +29,7 @@ Task 8: complete (commits fc1b2cb, 128ae31 — grain/vignette/Gargantua arc; ble
   Grain now plain opacity on ::after (0.22), vignette full strength on element. Restore switch documented in CSS comment.
   HUMAN CHECK: grain may now read too faint; one-line switch documented in journey.css above .voyage-atmosphere.
   Minor: report overstated that the brief authorised the DOM-order deviation (it did not; the deviation was still right).
+Task 9: complete (commit 5412757, review clean — wildcard animation:none replaces hand-listed selectors)
+  JS-driven motion handled elsewhere: Starfield still={reduced}, and MotionConfig reducedMotion="user" in App.jsx.
+Task 10: complete (commits 8b199b8, b3aa268, review clean — mobile tier)
+  Fixed post-review: .pulsar-beam no longer hidden on phones (my tier was written when it was still blurred; blur is gone, so it is compositor-only and cheap). Cascade collision fixed so reduced-motion opacity wins on phones.
