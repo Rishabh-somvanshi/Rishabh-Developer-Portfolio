@@ -18,3 +18,6 @@ Task 5: complete (commits 534761a, ff3672c, 1dd5bdf, d43a2f9 — review clean af
   Minor (final review): guard matches `animation:` shorthand only, would miss longhand animation-name/-duration.
   Minor (final review): JSX guard misses blur via CSS custom property or style.filter assignment in useEffect.
   HUMAN VISUAL CHECK NEEDED: .pulsar-beam feather width (3deg) and .bh-lens 2px@0.13 compensation are judgment calls.
+Task 6: complete (commit 8473df9, review clean — observeInView + parking in useScene/usePin, .scn-parked CSS)
+  All six scenes covered via the shared hook (verified by reading each component, not the report).
+  Minor (final review): no test asserts useScene/usePin actually call useParkWhenOffScreen — dropping that call would pass the suite.
