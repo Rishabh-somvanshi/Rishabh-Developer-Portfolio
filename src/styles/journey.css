@@ -1164,8 +1164,12 @@
 }
 
 /* A scene scrolled well out of view pays nothing: its animations stop and the
-   browser is free to skip rendering its subtree entirely. contain-intrinsic-size
-   keeps the scroll height stable so parking cannot shift layout. */
+   browser is free to skip rendering its subtree entirely. What actually keeps
+   parking layout-safe is the explicit inline `height` every .scn section gets
+   from useScene (see WorldScene.jsx, Origins.jsx, etc.) — that inline height
+   wins over content-visibility's intrinsic-size placeholder. contain-
+   intrinsic-size below is just the fallback for a scene rendered without an
+   explicit height. */
 .scn-parked *,
 .scn-parked *::before,
 .scn-parked *::after {
