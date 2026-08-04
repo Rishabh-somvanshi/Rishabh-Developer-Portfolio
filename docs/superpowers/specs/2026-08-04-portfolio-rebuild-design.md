@@ -231,13 +231,27 @@ cheaper to render and closer to the target feel.
 - Gargantua: the singularity scene keeps its horizontal accretion disk and gains
   the signature lensed arc over the top, built from gradients rather than blurs.
 
-**Architecture that serves both goals**
+**Architecture** *(revised after reading the code — see note)*
 
-A single rAF "engine" computes the damped scroll progress once per frame and
-writes a small set of CSS custom properties on a root element. Scenes consume
-those variables in CSS. This replaces per-element framer-motion `MotionValue`
-subscriptions — far fewer JS-driven DOM writes per frame, one shared clock for
-every scene, and inertia for free.
+Damping is added by wrapping the existing `scrollYProgress` in framer-motion's
+`useSpring` inside `src/journey/hooks.js`. Every scene already consumes
+`useScene()` / `usePin()`, so this is a single change that makes the whole
+voyage inertial.
+
+> **Deviation from the original plan.** This section first proposed replacing
+> framer-motion with a custom rAF engine writing CSS custom properties, on the
+> assumption that per-element `MotionValue` subscriptions were a cost driver.
+> Reading the code shows that assumption was wrong: framer-motion writes styles
+> directly, off the React render path, and ~89 style writes per frame is
+> inexpensive. The measured cost is **paint**, caused by animated `filter:
+> blur()` on large elements. A custom engine would carry real regression risk
+> for no measured gain, so the damping goal is met with `useSpring` and the
+> performance effort goes where the cost actually is.
+
+`src/journey/Starfield.jsx` is already well built — capped at 280 stars,
+paused on `visibilitychange`, driven by one rAF, and reading FX from a mutable
+ref rather than state. It needs only reduced-motion and off-screen handling,
+not a rewrite.
 
 ### Performance work (voyage)
 
