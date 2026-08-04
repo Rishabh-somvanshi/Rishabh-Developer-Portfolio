@@ -1179,3 +1179,51 @@
   content-visibility: auto;
   contain-intrinsic-size: auto 100vh;
 }
+
+/* Film grain and vignette. A single fixed, non-interactive layer: the grain is
+   an inline SVG turbulence tile, so there is no network request and nothing
+   animates. Cheap, and it does most of the cinematic work. */
+.voyage-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 120% 90% at 50% 50%, transparent 42%, rgba(0, 0, 0, 0.55) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  background-size: cover, 140px 140px;
+  opacity: 0.5;
+  mix-blend-mode: soft-light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voyage-atmosphere {
+    opacity: 0.32;
+  }
+}
+
+/* The far side of the accretion disk, lensed up and over the event horizon —
+   the shape that makes the silhouette read as Gargantua rather than a ring.
+   A bordered ellipse clipped to its top half; no blur, no animation. */
+.bh-arc {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 200px;
+  height: 116px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border-top: 3px solid rgba(255, 214, 148, 0.78);
+  border-left: 2px solid rgba(245, 169, 61, 0.34);
+  border-right: 2px solid rgba(245, 169, 61, 0.34);
+  border-bottom: none;
+  clip-path: inset(0 0 46% 0);
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  .bh-arc {
+    width: 150px;
+    height: 88px;
+  }
+}

@@ -9,6 +9,7 @@ function BlackHole({ scale, opacity }) {
       <span className="bh-disk" />
       <span className="bh-photon" />
       <span className="bh-core" />
+      <span className="bh-arc" />
       <span className="bh-lens" />
     </m.div>
   )
