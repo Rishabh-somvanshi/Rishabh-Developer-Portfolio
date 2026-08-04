@@ -980,3 +980,23 @@ footer {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Entry to the voyage — deliberately quieter than the résumé and contact CTAs,
+   so it reads as an aside rather than competing with them. */
+.hero-voyage {
+  margin-top: var(--s3);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+
+.hero-voyage:hover,
+.hero-voyage:focus-visible {
+  color: var(--accent);
+}

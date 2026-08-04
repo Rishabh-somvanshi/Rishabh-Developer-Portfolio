@@ -100,7 +100,7 @@ export default function App() {
             </a>
             <Nav onVoyage={enterVoyage} />
             <main id="overview">
-              <Hero />
+              <Hero onVoyage={enterVoyage} />
               <Experience />
               <CaseStudies />
               <Skills />
