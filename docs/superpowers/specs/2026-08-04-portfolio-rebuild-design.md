@@ -82,15 +82,40 @@ evidence that it was lost:
 - The project is not under version control (`.git` absent), despite having a
   `.gitignore`.
 
-Two caveats on the working copy:
+**Verified by rebuild.** After a clean `npm install`, `npm run build` emits
+`dist/assets/index-X_nUHHwl.js` — the same filename, the same 271,733 bytes, and
+the same SHA-256 (`c6a1dc0b…`) as the deployed bundle. The JavaScript is
+byte-identical, which conclusively identifies this source as the deployed
+source.
 
-- `dist/` is stale — it dates from 2026-07-14 and contains bundle hashes
-  (`index-Bv4rfDfY.js`, `index-CcVd_IRS.js`) that do not match the deployed
-  `index-X_nUHHwl.js`. The deployed build was produced later, on 2026-07-15,
-  and was not retained.
-- `node_modules/` is broken: `@rollup/rollup-win32-x64-msvc` is missing and
-  `node_modules/.bin/` is unpopulated, so the project does not currently build.
-  This is the known npm optional-dependency defect and needs a clean reinstall.
+Caveats on the working copy:
+
+- `node_modules/` was broken on arrival: `@rollup/rollup-win32-x64-msvc` missing
+  and `node_modules/.bin/` unpopulated — the known npm optional-dependency
+  defect. Resolved by deleting `node_modules` and reinstalling (70 packages).
+- The retained `dist/` was stale (2026-07-14, hashes `index-Bv4rfDfY.js` /
+  `index-CcVd_IRS.js`). Superseded by the verification rebuild.
+- The stray archives found alongside the source (`dist-deploy.zip`,
+  `dist-voyage.zip` (0 bytes), `zi5DoJLj`, `ziD32jC0`) are all 2026-07-14
+  builds; none contains the deployed bundle. They are gitignored, not committed.
+
+**The working copy is slightly ahead of production.** The CSS does not match:
+rebuilt 37,513 bytes vs deployed 36,971. Most of the difference is rule
+ordering, but three changes are real and were never deployed:
+
+- Added: `footer` / `.footer-inner` styles, `.contact-links a svg` sizing, and
+  `.contact-links a:hover`.
+- Added: a global `@media (prefers-reduced-motion: reduce)` block setting
+  `html { scroll-behavior: auto }` and
+  `*, *:before, *:after { animation-duration: .01ms !important; transition-duration: .01ms !important }`.
+- Removed: `.meteor-glow` from the reduced-motion `animation: none !important`
+  selector list — a small regression, since meteor glows now keep animating for
+  reduced-motion users. Superseded anyway by the reduced-motion work below.
+
+Consequence: the first deploy of this work also ships these pending CSS edits.
+That is desirable, but it means production and the working copy were not in
+sync at the start, and the live site is not a perfect baseline for visual
+comparison of CSS-only changes.
 
 ## Goals
 
@@ -229,13 +254,13 @@ the meta tags are static in `index.html`.
 - ~~Visual fidelity drift.~~ Eliminated — the original source was recovered, so
   nothing is reconstructed. The committed mirror remains available for
   side-by-side comparison.
-- **Cannot currently build.** `node_modules` is missing
-  `@rollup/rollup-win32-x64-msvc`. A clean `npm install` is the first
-  implementation step, and must succeed before any change can be verified.
-- **Deployed build is not reproducible byte-for-byte.** The retained `dist/`
-  predates the deployed build, so the exact deployed bundle cannot be
-  regenerated for comparison. The committed mirror of the live output is the
-  reference instead.
+- ~~Cannot currently build.~~ Resolved — clean reinstall done, build verified.
+- ~~Deployed build is not reproducible.~~ Resolved — the rebuild reproduces the
+  deployed JavaScript bundle byte-for-byte.
+- **Working copy is ahead of production on CSS.** Deploying ships three
+  previously-undeployed CSS edits (see Finding 3). Reviewed and accepted; they
+  are improvements. Noted so an unexpected visual delta is not mistaken for a
+  regression introduced by this work.
 - **Production URL breakage.** Mitigated by preview-first deploys and by keeping
   `#overview` resolving to the dossier.
 - **GitHub push requires credentials.** The `gh` CLI is not installed and no
