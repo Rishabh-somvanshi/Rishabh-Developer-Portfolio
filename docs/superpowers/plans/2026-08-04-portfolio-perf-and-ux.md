@@ -41,7 +41,7 @@ cd /d/Portfolio && npm install -D vitest@^2.1.0 jsdom@^25.0.0 --no-audit --no-fu
 - [ ] **Step 2: Create `vitest.config.js`**
 
 ```js
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -51,6 +51,8 @@ export default defineConfig({
   },
 })
 ```
+
+Import from `vitest/config`, not `vite` — the latter has no `test` key in its type surface and only works by accident.
 
 - [ ] **Step 3: Add scripts to `package.json`**
 
@@ -644,30 +646,33 @@ cd /d/Portfolio && git add src/styles/journey.css src/styles/__tests__/noAnimate
 Fifteen infinite animations currently run whether or not their scene is visible.
 
 **Files:**
-- Create: `src/journey/useInView.js`
-- Create: `src/journey/__tests__/useInView.test.js`
-- Modify: `src/journey/WorldScene.jsx`
+- Create: `src/journey/observeInView.js`
+- Create: `src/journey/__tests__/observeInView.test.js`
+- Modify: `src/journey/hooks.js` (`useScene` and `usePin`)
 - Modify: `src/styles/journey.css` (append)
 
 **Interfaces:**
-- Consumes: nothing.
-- Produces: `useInView(ref, { rootMargin?: string }): boolean` — true while the element intersects the viewport. Defaults to `true` when `IntersectionObserver` is unavailable, so nothing is hidden on unsupported browsers.
+- Consumes: `useScene` / `usePin` from `src/journey/hooks.js` (Task 7 also edits this file — if Task 7 ran first, keep its damping intact).
+- Produces: `observeInView(el, onChange, { rootMargin?: string }): () => void` — calls `onChange(boolean)` as the element enters and leaves, returns a cleanup function. Calls `onChange(true)` immediately and returns a no-op when `IntersectionObserver` is unavailable.
+
+**Why the hook and not each component:** six components render `.scn` — `Launch`, `Origins`, `Reentry`, `Singularity`, `TwinLights`, `WorldScene` — and all six call `useScene()`. The most expensive animations (`.pulsar-beam`, `.nova-rays` in `TwinLights`; `.bh-disk` in `Singularity`) are *not* in `WorldScene`. Parking belongs in the shared primitive that already owns the ref, so no scene can be missed and there is one place to change.
 
 - [ ] **Step 1: Write the failing test**
 
-Create `src/journey/__tests__/useInView.test.js`:
+Create `src/journey/__tests__/observeInView.test.js`:
 
 ```js
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
-import { useInView } from '../useInView'
+import { observeInView } from '../observeInView'
 
-let observed
 let trigger
+let observed
+let disconnected
 
 beforeEach(() => {
-  observed = []
   trigger = null
+  observed = []
+  disconnected = 0
   vi.stubGlobal(
     'IntersectionObserver',
     class {
@@ -677,120 +682,134 @@ beforeEach(() => {
       observe(el) {
         observed.push(el)
       }
-      disconnect() {}
+      disconnect() {
+        disconnected++
+      }
     },
   )
 })
 
-describe('useInView', () => {
-  it('starts false and turns true once the element intersects', () => {
-    const ref = { current: document.createElement('div') }
-    const { result } = renderHook(() => useInView(ref))
-    expect(result.current).toBe(false)
-    act(() => trigger([{ isIntersecting: true }]))
-    expect(result.current).toBe(true)
-  })
-
-  it('turns false again when the element leaves', () => {
-    const ref = { current: document.createElement('div') }
-    const { result } = renderHook(() => useInView(ref))
-    act(() => trigger([{ isIntersecting: true }]))
-    act(() => trigger([{ isIntersecting: false }]))
-    expect(result.current).toBe(false)
-  })
-
-  it('observes the referenced element', () => {
+describe('observeInView', () => {
+  it('observes the element it is given', () => {
     const el = document.createElement('div')
-    renderHook(() => useInView({ current: el }))
-    expect(observed).toContain(el)
+    observeInView(el, () => {})
+    expect(observed).toEqual([el])
   })
 
-  it('defaults to true when IntersectionObserver is unavailable', () => {
+  it('reports entering and leaving', () => {
+    const seen = []
+    observeInView(document.createElement('div'), (v) => seen.push(v))
+    trigger([{ isIntersecting: true }])
+    trigger([{ isIntersecting: false }])
+    expect(seen).toEqual([true, false])
+  })
+
+  it('uses the last entry when several arrive at once', () => {
+    const seen = []
+    observeInView(document.createElement('div'), (v) => seen.push(v))
+    trigger([{ isIntersecting: true }, { isIntersecting: false }])
+    expect(seen).toEqual([false])
+  })
+
+  it('passes rootMargin through and disconnects on cleanup', () => {
+    const stop = observeInView(document.createElement('div'), () => {}, {
+      rootMargin: '50px',
+    })
+    stop()
+    expect(disconnected).toBe(1)
+  })
+
+  it('reports visible and no-ops when IntersectionObserver is missing', () => {
     vi.stubGlobal('IntersectionObserver', undefined)
-    const { result } = renderHook(() => useInView({ current: document.createElement('div') }))
-    expect(result.current).toBe(true)
+    const seen = []
+    const stop = observeInView(document.createElement('div'), (v) => seen.push(v))
+    expect(seen).toEqual([true])
+    expect(() => stop()).not.toThrow()
+  })
+
+  it('reports visible and no-ops when there is no element', () => {
+    const seen = []
+    const stop = observeInView(null, (v) => seen.push(v))
+    expect(seen).toEqual([true])
+    expect(() => stop()).not.toThrow()
   })
 })
 ```
 
-- [ ] **Step 2: Install the React testing helper**
+- [ ] **Step 2: Run the test to confirm it fails**
 
-```bash
-cd /d/Portfolio && npm install -D @testing-library/react@^16.1.0 --no-audit --no-fund
-```
+Run: `cd /d/Portfolio && npm test -- observeInView`
+Expected: FAIL — `Failed to resolve import "../observeInView"`.
 
-- [ ] **Step 3: Run the test to confirm it fails**
+- [ ] **Step 3: Write the implementation**
 
-Run: `cd /d/Portfolio && npm test -- useInView`
-Expected: FAIL — `Failed to resolve import "../useInView"`.
-
-- [ ] **Step 4: Write the hook**
-
-Create `src/journey/useInView.js`:
+Create `src/journey/observeInView.js`:
 
 ```js
-import { useEffect, useState } from 'react'
-
 /**
- * Whether an element is currently on screen.
+ * Call back as an element enters and leaves the viewport.
  *
- * Used to park a scene's animations while it is scrolled past — fifteen
- * infinite animations running at once is most of the voyage's paint cost, and
- * almost none of them are visible at any given moment.
+ * Used to park a scene while it is scrolled past. Fifteen infinite animations
+ * run across the voyage and almost none are visible at any moment, so parking
+ * the off-screen ones is most of the win.
  *
- * Falls back to `true` where IntersectionObserver is missing: showing a static
- * scene would be a worse failure than paying for animation.
+ * Where IntersectionObserver is unavailable, reports visible and does nothing
+ * further — a permanently frozen scene would be a worse failure than paying
+ * for animation.
  */
-export function useInView(ref, { rootMargin = '200px' } = {}) {
-  const supported = typeof IntersectionObserver !== 'undefined'
-  const [inView, setInView] = useState(!supported)
+export function observeInView(el, onChange, { rootMargin = '200px' } = {}) {
+  if (typeof IntersectionObserver === 'undefined' || !el) {
+    onChange(true)
+    return () => {}
+  }
 
-  useEffect(() => {
-    if (!supported) {
-      setInView(true)
-      return
-    }
-    const el = ref.current
-    if (!el) return
-
-    const observer = new IntersectionObserver(
-      (entries) => setInView(entries[entries.length - 1].isIntersecting),
-      { rootMargin },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [ref, rootMargin, supported])
-
-  return inView
+  const observer = new IntersectionObserver(
+    (entries) => onChange(entries[entries.length - 1].isIntersecting),
+    { rootMargin },
+  )
+  observer.observe(el)
+  return () => observer.disconnect()
 }
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [ ] **Step 4: Run the test to verify it passes**
 
-Run: `cd /d/Portfolio && npm test -- useInView`
-Expected: PASS, 4 tests passed.
+Run: `cd /d/Portfolio && npm test -- observeInView`
+Expected: PASS, 6 tests passed.
 
-- [ ] **Step 6: Apply it in `WorldScene.jsx`**
+- [ ] **Step 5: Apply parking inside `useScene` and `usePin`**
 
-Add the import beside the existing ones:
-
-```js
-import { useInView } from './useInView'
-```
-
-Inside the component, directly after the existing `const { ref, p, height: h } = useScene(height)` line:
+In `src/journey/hooks.js`, add to the imports:
 
 ```js
-  const inView = useInView(ref)
+import { useEffect } from 'react'
+import { observeInView } from './observeInView'
 ```
 
-Then add the class to the section element, replacing the existing `className="scn"`:
+Add this helper above `useScene`:
 
-```jsx
-    <section ref={ref} id={id} className={`scn${inView ? '' : ' scn-parked'}`} style={{ height: h }}>
+```js
+/**
+ * Toggle the parked class on a scene as it enters and leaves view.
+ *
+ * Applied here rather than in each scene component: all six scenes go through
+ * useScene/usePin, and the costliest animations are not in the one component
+ * it would be easy to remember to change.
+ */
+function useParkWhenOffScreen(ref) {
+  useEffect(
+    () =>
+      observeInView(ref.current, (inView) => {
+        ref.current?.classList.toggle('scn-parked', !inView)
+      }),
+    [ref],
+  )
+}
 ```
 
-- [ ] **Step 7: Add the parking styles**
+Then call `useParkWhenOffScreen(ref)` inside both `useScene` and `usePin`, immediately after their `useScroll(...)` call.
+
+- [ ] **Step 6: Add the parking styles**
 
 Append to `src/styles/journey.css`:
 
@@ -810,16 +829,24 @@ Append to `src/styles/journey.css`:
 }
 ```
 
-- [ ] **Step 8: Verify nothing shifts**
+- [ ] **Step 7: Verify nothing shifts, and that every scene parks**
 
 Run: `cd /d/Portfolio && npm run build && npm run dev`
 
-On `http://localhost:5173/#voyage`, scroll the full page top to bottom and back. Scene positions must not jump, and each world's planet and card must still animate in as it enters. Stop the server.
+On `http://localhost:5173/#voyage`, scroll the full page top to bottom and back. Scene positions must not jump, and each world's planet and card must still animate in as it enters.
 
-- [ ] **Step 9: Commit**
+Then confirm parking reaches the expensive scenes — with the singularity scrolled out of view, run in the console:
+
+```js
+[...document.querySelectorAll('.scn')].map((s) => [s.id, s.classList.contains('scn-parked')])
+```
+
+Expected: every scene except the one or two currently on screen reports `true`, and `singularity` and `stars` are among them when scrolled away. Stop the server.
+
+- [ ] **Step 8: Commit**
 
 ```bash
-cd /d/Portfolio && git add src/journey/useInView.js src/journey/__tests__/useInView.test.js src/journey/WorldScene.jsx src/styles/journey.css package.json package-lock.json && git commit -m "perf: park animations and rendering for off-screen voyage scenes"
+cd /d/Portfolio && git add src/journey/observeInView.js src/journey/__tests__/observeInView.test.js src/journey/hooks.js src/styles/journey.css && git commit -m "perf: park animations and rendering for off-screen voyage scenes"
 ```
 
 ---
@@ -1029,12 +1056,36 @@ The current rule at `journey.css:1162` lists selectors by hand and has already d
 Append inside the existing `describe('journey.css paint cost', ...)` block in `src/styles/__tests__/noAnimatedBlur.test.js`:
 
 ```js
+  /**
+   * Extract every reduced-motion block by scanning balanced braces. There is
+   * more than one such block in this file, and a regex spanning to the last
+   * closing brace would silently match across unrelated rules.
+   */
+  function reducedMotionBlocks(source) {
+    const blocks = []
+    const opener = /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{/g
+    let match
+    while ((match = opener.exec(source))) {
+      let depth = 1
+      let i = match.index + match[0].length
+      const start = i
+      while (i < source.length && depth > 0) {
+        if (source[i] === '{') depth++
+        else if (source[i] === '}') depth--
+        i++
+      }
+      blocks.push(source.slice(start, i - 1))
+    }
+    return blocks
+  }
+
   it('stops every animation under reduced motion, without naming selectors', () => {
-    const block = css.match(
-      /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{([\s\S]*)\n\}/,
+    const blocks = reducedMotionBlocks(css)
+    expect(blocks.length, 'no reduced-motion block found').toBeGreaterThan(0)
+    const wildcard = blocks.some((b) =>
+      /(^|[\s,{])\*\s*,[\s\S]*?animation:\s*none\s*!important/.test(b),
     )
-    expect(block, 'no reduced-motion block found').not.toBeNull()
-    expect(block[1]).toMatch(/\*\s*,[\s\S]*animation:\s*none\s*!important/)
+    expect(wildcard, 'no wildcard animation:none rule under reduced motion').toBe(true)
   })
 ```
 
