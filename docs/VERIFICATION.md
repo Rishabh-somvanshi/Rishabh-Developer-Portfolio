@@ -548,3 +548,26 @@ changing. The fix only changed one number (`0.74` → `0.58` in
   dead space, lower it further. Don't touch the per-scene `vh` values or
   any `useTransform` ranges to fix a feel issue here — see the updated
   comment on `useScene` for why.
+
+### 8c. Canvas / Starfield cost (Problem 3)
+
+On a real phone, open the browser's performance/FPS overlay if available
+(e.g. Safari Web Inspector's Timelines, or Chrome remote debugging with the
+Performance panel) while scrolling through the voyage, especially the
+re-entry scene (warp-streak mode) and any scene with ambient shooting stars
+active on desktop for comparison:
+
+- Frame rate should be visibly steadier on the phone than before, especially
+  during re-entry.
+- No ambient shooting stars should ever appear on the coarse-pointer device
+  (they're skipped entirely there now) — confirm this isn't perceptible as
+  "something's missing" to a first-time viewer; it's meant to be invisible.
+- Confirm `prefers-reduced-motion` still renders exactly one static frame on
+  the phone (this fix didn't touch that code path, but it now draws that one
+  frame with the coarse-pointer dpr/density numbers, so it's worth
+  re-checking rather than assuming).
+- If a performance profiler is available, compare canvas fill/rasterize time
+  against a desktop run — the backing store should be roughly 44% fewer
+  pixels (see the report for the exact before/after numbers) and there
+  should be no `createLinearGradient` calls at all during warp mode or for
+  ambient shooters on the phone.

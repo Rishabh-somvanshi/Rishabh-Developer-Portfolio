@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { isCoarsePointer } from './hooks'
 
 /**
  * Fixed full-viewport canvas starfield behind the voyage.
@@ -18,6 +19,14 @@ export default function Starfield({ fx, still = false }) {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
+
+    // Computed once, like useScene does — a pointer type doesn't change
+    // mid-session, so there is no reason to re-check matchMedia every frame.
+    // Phones report a devicePixelRatio of 3 routinely; a canvas backing
+    // store sized for that plus desktop-tuned star density is real per-frame
+    // cost (clearing/redrawing ~1.2M pixels, dozens of stars, none of it
+    // free) that a phone GPU/CPU feels far more than a laptop does.
+    const coarse = isCoarsePointer()
 
     let w = 0
     let h = 0
@@ -45,7 +54,7 @@ export default function Starfield({ fx, still = false }) {
     }
 
     function build() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2)
+      dpr = Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2)
       w = window.innerWidth
       h = window.innerHeight
       canvas.width = Math.round(w * dpr)
@@ -54,7 +63,7 @@ export default function Starfield({ fx, still = false }) {
       canvas.style.height = h + 'px'
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      const count = Math.min(Math.round((w * h) / 4200), 280)
+      const count = Math.min(Math.round((w * h) / (coarse ? 7000 : 4200)), coarse ? 168 : 280)
       stars = Array.from({ length: count }, () => {
         const depth = Math.random() < 0.55 ? 0.35 : Math.random() < 0.75 ? 0.65 : 1
         return {
@@ -121,11 +130,18 @@ export default function Starfield({ fx, still = false }) {
         if (warp > 0.02) {
           // re-entry streaks — stars stretch along travel axis
           const len = warp * (18 + 64 * s.z) + Math.abs(drift) * 0.35 * s.z
-          const grad = ctx.createLinearGradient(px, py - len, px, py + len * 0.2)
-          grad.addColorStop(0, 'rgba(237,237,239,0)')
-          grad.addColorStop(0.7, col)
-          grad.addColorStop(1, col)
-          ctx.strokeStyle = grad
+          if (coarse) {
+            // Skip the per-star gradient allocation on phones — a solid
+            // stroke reads the same at speed and avoids building/discarding
+            // a gradient object for every star, every frame.
+            ctx.strokeStyle = col
+          } else {
+            const grad = ctx.createLinearGradient(px, py - len, px, py + len * 0.2)
+            grad.addColorStop(0, 'rgba(237,237,239,0)')
+            grad.addColorStop(0.7, col)
+            grad.addColorStop(1, col)
+            ctx.strokeStyle = grad
+          }
           ctx.lineWidth = Math.max(s.r * (1 - warp * 0.4), 0.4)
           ctx.beginPath()
           ctx.moveTo(px, py - len)
@@ -139,8 +155,12 @@ export default function Starfield({ fx, still = false }) {
         }
       }
 
-      // ambient shooting stars — sparse, diagonal, with fading tails
-      if (!still) {
+      // ambient shooting stars — sparse, diagonal, with fading tails.
+      // Skipped entirely on coarse pointers: each one allocates its own
+      // per-frame gradient (createLinearGradient), on top of the per-star
+      // warp gradients above — cost a phone doesn't need to pay for an
+      // ambient flourish.
+      if (!still && !coarse) {
         if (shooters.length < 2 && Math.random() < 0.007) spawnShooter()
         for (let i = shooters.length - 1; i >= 0; i--) {
           const s = shooters[i]
