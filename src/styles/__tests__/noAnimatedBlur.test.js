@@ -30,7 +30,7 @@ function rules(source) {
 describe('paint cost in stylesheets', () => {
   it('never animates a blurred element in journey.css', () => {
     const offenders = rules(journeyCss)
-      .filter((r) => /filter:\s*[^;]*blur\(/.test(r.body) && /animation:/.test(r.body))
+      .filter((r) => /filter:\s*[^;]*blur\(/.test(r.body) && /animation[-a-z]*:\s/.test(r.body))
       .map((r) => r.selector)
     expect(offenders).toEqual([])
   })
