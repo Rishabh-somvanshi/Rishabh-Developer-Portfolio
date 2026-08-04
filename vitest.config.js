@@ -5,6 +5,6 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.test.js'],
     restoreMocks: true,
-    setupFiles: ['src/lib/__tests__/setup.js'],
+    setupFiles: ['vitest.setup.js'],
   },
 })
