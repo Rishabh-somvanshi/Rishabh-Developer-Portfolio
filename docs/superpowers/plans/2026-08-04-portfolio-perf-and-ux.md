@@ -1,5 +1,12 @@
 # Portfolio Performance & UX Implementation Plan
 
+> **Status:** This plan was fully executed on branch `feat/perf-and-ux`,
+> including the final pre-merge review's follow-up fixes. The checkboxes
+> below were never ticked off by hand as work landed, so they should not be
+> read as tracking progress — see `.superpowers/sdd/progress.md` for the
+> authoritative per-task record (what was done, in what commit, and the
+> review/report trail for each task).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Land recruiters on the fast dossier view by default, make the voyage opt-in, and rebuild the voyage's motion so it is both smooth and cinematic.
