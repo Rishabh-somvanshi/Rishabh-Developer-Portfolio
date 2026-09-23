@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber'
 import CameraRig from './CameraRig'
 import Starfield3D from './objects/Starfield3D'
 import Nebula from './objects/Nebula'
+import Worlds from './objects/Worlds'
 import { SUN_DIR } from './camera/stations'
 import { progress } from './store'
 
@@ -35,7 +36,8 @@ export default function Scene({ reduced }) {
       <CameraRig reduced={reduced} />
       <Starfield3D />
       <Nebula />
-      {/* voyage bodies (Tasks 13–15) */}
+      <Worlds />
+      {/* voyage bodies (Tasks 14–15) */}
       <Precompile />
     </>
   )
