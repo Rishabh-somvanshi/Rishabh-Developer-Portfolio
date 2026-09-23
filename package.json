@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "audit": "node scripts/audit-static.mjs"
+    "audit": "node scripts/audit-static.mjs",
+    "textures": "node scripts/textures.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.1.0",
@@ -29,6 +30,7 @@
     "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^4.3.2",
     "jsdom": "^25.0.1",
+    "sharp": "^0.35.4",
     "vite": "^5.4.8",
     "vitest": "^2.1.9"
   }
