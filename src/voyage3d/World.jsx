@@ -4,6 +4,7 @@ import { Stats } from '@react-three/drei'
 import QualityProvider from './quality/QualityProvider'
 import LayoutProvider from './LayoutProvider'
 import Scene from './Scene'
+import FrameDriver from './FrameDriver'
 import { initialTier, tierOverride, TIER_SETTINGS } from './quality/tiers'
 import { CAMERA_FOV } from './camera/framing'
 import { isCoarsePointer } from '../journey/hooks'
@@ -46,16 +47,21 @@ export default function World({ reduced, onFail }) {
       aria-hidden="true"
       dpr={dpr}
       flat
+      // Coarse pointers (phones) only render on demand — a small FrameDriver
+      // below invalidates() at ~30 fps instead of every vsync, roughly
+      // halving GPU/battery draw. Desktop keeps the default "always" loop.
+      frameloop={coarse ? 'demand' : 'always'}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
       camera={{ fov: CAMERA_FOV, near: 0.1, far: 3000, position: [0, 0, 40] }}
       onCreated={({ gl }) => watchContextLoss(gl, onFail)}
     >
       <color attach="background" args={['#0a0a0b']} />
-      <QualityProvider initial={initial} locked={!!override} onDpr={setDpr}>
+      <QualityProvider initial={initial} locked={!!override} capped={coarse} onDpr={setDpr}>
         <LayoutProvider>
           <Scene reduced={reduced} />
         </LayoutProvider>
       </QualityProvider>
+      {coarse && <FrameDriver still={reduced} />}
       {DEBUG && <Stats />}
     </Canvas>
   )

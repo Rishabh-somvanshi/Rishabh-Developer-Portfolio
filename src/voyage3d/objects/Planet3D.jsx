@@ -160,7 +160,11 @@ export default function Planet3D({
     <group position={center} scale={scale}>
       <group ref={spinRef}>
         <mesh material={surface ?? undefined}>
-          {flat ? <icosahedronGeometry args={[radius, 3]} /> : <sphereGeometry args={[radius, 96, 64]} />}
+          {flat ? (
+            <icosahedronGeometry args={[radius, 3]} />
+          ) : (
+            <sphereGeometry args={[radius, settings.segments[0], settings.segments[1]]} />
+          )}
           {physical && <meshPhysicalMaterial {...physical} map={mapTex ?? physical.map} />}
         </mesh>
       </group>

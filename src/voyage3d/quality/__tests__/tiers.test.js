@@ -10,9 +10,9 @@ const run = (gov, fps, ms, opts = both) => {
 
 describe('tier settings', () => {
   it('match the spec table', () => {
-    expect(TIER_SETTINGS.low).toMatchObject({ dpr: 1, bloom: false, stars: 4000, octaves: 2, clouds: false, meteors: 80, msaa: 0 })
-    expect(TIER_SETTINGS.medium).toMatchObject({ dpr: 1.5, bloom: true, bloomScale: 0.5, stars: 10000, octaves: 3, meteors: 200, msaa: 2 })
-    expect(TIER_SETTINGS.high).toMatchObject({ dpr: 2, lensing: 'screen', stars: 20000, octaves: 5, meteors: 400, msaa: 4 })
+    expect(TIER_SETTINGS.low).toMatchObject({ dpr: 1, bloom: false, stars: 2500, octaves: 2, clouds: false, meteors: 80, msaa: 0, segments: [64, 48] })
+    expect(TIER_SETTINGS.medium).toMatchObject({ dpr: 1.5, bloom: true, bloomScale: 0.5, stars: 10000, octaves: 3, meteors: 200, msaa: 2, segments: [96, 64] })
+    expect(TIER_SETTINGS.high).toMatchObject({ dpr: 2, lensing: 'screen', stars: 20000, octaves: 5, meteors: 400, msaa: 4, segments: [96, 64] })
   })
   it('start low on touch and medium on desktop', () => {
     expect(initialTier({ coarse: true })).toBe('low')

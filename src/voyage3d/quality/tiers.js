@@ -2,9 +2,9 @@ export const TIER_ORDER = ['low', 'medium', 'high']
 const MAX_FRAME_MS = 250 // longer frames are hitches or a resumed tab, not a verdict on the device
 
 export const TIER_SETTINGS = {
-  low: { dpr: 1, bloom: false, bloomScale: 0, lensing: 'static', stars: 4000, octaves: 2, clouds: false, meteors: 80, trail: 0.45, msaa: 0 },
-  medium: { dpr: 1.5, bloom: true, bloomScale: 0.5, lensing: 'sprite', stars: 10000, octaves: 3, clouds: true, meteors: 200, trail: 0.75, msaa: 2 },
-  high: { dpr: 2, bloom: true, bloomScale: 1, lensing: 'screen', stars: 20000, octaves: 5, clouds: true, meteors: 400, trail: 1, msaa: 4 },
+  low: { dpr: 1, bloom: false, bloomScale: 0, lensing: 'static', stars: 2500, octaves: 2, clouds: false, meteors: 80, trail: 0.45, msaa: 0, segments: [64, 48] },
+  medium: { dpr: 1.5, bloom: true, bloomScale: 0.5, lensing: 'sprite', stars: 10000, octaves: 3, clouds: true, meteors: 200, trail: 0.75, msaa: 2, segments: [96, 64] },
+  high: { dpr: 2, bloom: true, bloomScale: 1, lensing: 'screen', stars: 20000, octaves: 5, clouds: true, meteors: 400, trail: 1, msaa: 4, segments: [96, 64] },
 }
 
 /** Phones start conservative and earn their way up; desktops start in the middle. */
