@@ -4,8 +4,8 @@ import { ringVertex, ringFragment } from '../shaders/ring.glsl'
 
 /** Banded ring, tilted like the old SVG rings (tilt in degrees). */
 export default function Ring({ radius, color, tilt = -18 }) {
-  const inner = radius * 1.35
-  const outer = radius * 2.1
+  const inner = radius * 1.3
+  const outer = radius * 1.75 // retired SVG rings reached 1.72 × radius
   const material = useMemo(
     () =>
       new ShaderMaterial({

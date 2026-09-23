@@ -7,7 +7,7 @@
  *   ndc.x = dx / (dz · tan(fov/2) · aspect),  ndc.y = dy / (dz · tan(fov/2))
  */
 export const CAMERA_FOV = 50
-export const FILL = 0.8 // body diameter as a share of its slot's height (room for aura/ring)
+export const FILL = 0.62 // body diameter as a share of its slot's height — matches the retired SVG planets (260/420)
 export const FRAME_DISTANCE = 4.5 // camera distance from a framed body, in body radii
 
 const tanHalf = (fov) => Math.tan(((fov * Math.PI) / 180) / 2)
