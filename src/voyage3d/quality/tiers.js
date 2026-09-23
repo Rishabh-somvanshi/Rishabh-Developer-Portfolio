@@ -1,4 +1,5 @@
 export const TIER_ORDER = ['low', 'medium', 'high']
+const MAX_FRAME_MS = 250 // longer frames are hitches or a resumed tab, not a verdict on the device
 
 export const TIER_SETTINGS = {
   low: { dpr: 1, bloom: false, bloomScale: 0, lensing: 'static', stars: 4000, octaves: 2, clouds: false, meteors: 80, trail: 0.45 },
@@ -33,7 +34,7 @@ export function createFpsGovernor({ upFps = 55, upMs = 3000, downFps = 40, downM
       return switches >= maxSwitches
     },
     sample(dtMs, { canUp, canDown }) {
-      if (switches >= maxSwitches || !(dtMs > 0)) return null
+      if (switches >= maxSwitches || !(dtMs > 0) || dtMs > MAX_FRAME_MS) return null
       ema = ema === null ? dtMs : ema * 0.9 + dtMs * 0.1
       const fps = 1000 / ema
       if (fps >= upFps) {

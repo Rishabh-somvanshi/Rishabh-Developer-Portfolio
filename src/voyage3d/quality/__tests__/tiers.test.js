@@ -42,6 +42,16 @@ describe('createFpsGovernor', () => {
     expect(run(gov, 60, 4000, { canUp: false, canDown: true })).toBeNull()
     expect(gov.locked).toBe(false)
   })
+  it('ignores a single very long frame (resumed tab)', () => {
+    const gov = createFpsGovernor()
+    expect(gov.sample(5000, both)).toBeNull()
+    expect(run(gov, 60, 3300)).toBe('up')
+  })
+  it('does not count a down-step it cannot take', () => {
+    const gov = createFpsGovernor()
+    expect(run(gov, 30, 4000, { canUp: true, canDown: false })).toBeNull()
+    expect(gov.locked).toBe(false)
+  })
   it('locks after 3 switches', () => {
     const gov = createFpsGovernor()
     // Later runs are longer: the smoothed frame time takes a few hundred ms to cross each threshold.
