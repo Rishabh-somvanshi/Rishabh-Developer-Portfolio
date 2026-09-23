@@ -21,5 +21,6 @@ void main() {
              * smoothstep(0.0, 0.35, vUv.y) * smoothstep(1.0, 0.65, vUv.y);
   vec3 col = mix(vec3(0.91, 0.58, 0.16), vec3(0.44, 0.64, 0.6), n2);
   gl_FragColor = vec4(col, mask * edge * 0.1);
+  #include <colorspace_fragment>
 }
 `

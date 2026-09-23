@@ -18,5 +18,6 @@ void main() {
     ? exp(-pow((d - uRing) / 0.05, 2.0))
     : pow(smoothstep(0.5, 0.0, d), 2.0);
   gl_FragColor = vec4(uColor, a * uIntensity);
+  #include <colorspace_fragment>
 }
 `

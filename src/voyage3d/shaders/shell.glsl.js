@@ -18,5 +18,6 @@ varying vec3 vV;
 void main() {
   float f = pow(1.0 - abs(dot(vN, vV)), 3.0);
   gl_FragColor = vec4(uColor * 1.6, f * uOpacity);
+  #include <colorspace_fragment>
 }
 `

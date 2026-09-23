@@ -23,5 +23,6 @@ uniform float uOpacity;
 varying float vHead;
 void main() {
   gl_FragColor = vec4(vec3(0.93), vHead * uOpacity);
+  #include <colorspace_fragment>
 }
 `

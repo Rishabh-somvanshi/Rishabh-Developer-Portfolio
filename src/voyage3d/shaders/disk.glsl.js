@@ -30,5 +30,6 @@ void main() {
   float doppler = 1.0 + 0.6 * sin(ang - 0.4);
   float a = smoothstep(0.0, 0.08, t) * smoothstep(1.0, 0.6, t) * streaks * uOpacity;
   gl_FragColor = vec4(col * doppler * (0.35 + temp * 0.9), a * 0.85);
+  #include <colorspace_fragment>
 }
 `

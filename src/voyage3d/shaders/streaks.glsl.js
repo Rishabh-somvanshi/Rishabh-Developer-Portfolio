@@ -18,5 +18,6 @@ varying float vAmber;
 void main() {
   vec3 col = mix(vec3(0.93), vec3(0.96, 0.66, 0.24), vAmber);
   gl_FragColor = vec4(col, vHead * vHead * uOpacity);
+  #include <colorspace_fragment>
 }
 `

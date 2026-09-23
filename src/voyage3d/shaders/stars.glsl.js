@@ -23,5 +23,6 @@ void main() {
   float a = smoothstep(0.5, 0.0, d) * vAlpha;
   vec3 col = mix(vec3(0.93), vec3(0.91, 0.58, 0.16), vAmber);
   gl_FragColor = vec4(col, a);
+  #include <colorspace_fragment>
 }
 `
