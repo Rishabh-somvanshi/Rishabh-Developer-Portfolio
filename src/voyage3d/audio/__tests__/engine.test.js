@@ -122,8 +122,35 @@ describe('audio engine', () => {
     expect(started.sort()).toEqual(['b', 'c', 'd'])
     store.index = 4
     engine.update(store)
+    vi.advanceTimersByTime(250)
     expect(log).toContainEqual(['stop', 'b'])
     expect(log).toContainEqual(['stop', 'c'])
+  })
+
+  it('fades a voice out before stopping it on a jump', () => {
+    const { engine, log } = make({ primed: new FakeAudioContext() })
+    const store = createProgressStore()
+    store.index = 1
+    engine.update(store)
+    store.index = 4
+    engine.update(store)
+    expect(log).not.toContainEqual(['stop', 'a'])
+    vi.advanceTimersByTime(250)
+    expect(log).toContainEqual(['stop', 'a'])
+  })
+
+  it('keeps a voice that returns before its stop fires', () => {
+    const { engine, log } = make({ primed: new FakeAudioContext() })
+    const store = createProgressStore()
+    store.index = 1
+    engine.update(store)
+    store.index = 4
+    engine.update(store)
+    vi.advanceTimersByTime(100)
+    store.index = 1
+    engine.update(store)
+    vi.advanceTimersByTime(300)
+    expect(log).not.toContainEqual(['stop', 'a'])
   })
 
   it('suspends while the tab is hidden and resumes when it returns', () => {

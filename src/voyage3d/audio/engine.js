@@ -17,6 +17,7 @@ import { WORLDS } from '../../data/voyage'
 export const SOUND_KEY = 'rs.sound'
 const MASTER_LEVEL = 0.6
 const SCHEDULER_MS = 25
+const STOP_DELAY_MS = 200 // Delay before stopping a far voice; the 0.08s gain ramp has settled by then
 
 /** Each world's voice sits on its planet's side of the screen (unflipped worlds are drawn on the left). */
 const PAN = Object.fromEntries(WORLDS.map((w) => [w.id, w.flip ? 0.3 : -0.3]))
@@ -61,6 +62,7 @@ export function createAudioEngine({
   let graph = null
   let scheduler = null
   const listeners = new Set()
+  const pendingStops = new Map() // voice → setTimeout id
 
   const snapshot = () => ({ muted, state, needsGesture: state === 'idle' && !muted })
   const emit = () => {
@@ -231,8 +233,26 @@ export function createAudioEngine({
       const mix = mixFor(store, sceneIds)
       graph.voices.forEach((v, i) => {
         const near = Math.abs(i - store.index) <= 1
-        if (near) v.start()
-        else if (v.running) v.stop()
+        if (near) {
+          v.start()
+          // If there was a pending stop, cancel it and restart the voice
+          if (pendingStops.has(v)) {
+            clearTimeout(pendingStops.get(v))
+            pendingStops.delete(v)
+          }
+        } else if (v.running && !pendingStops.has(v)) {
+          // Schedule a delayed stop for this voice
+          const timeoutId = setTimeout(() => {
+            // Only stop if voice is still far and engine is still running
+            if (!pendingStops.has(v)) return
+            const stillFar = Math.abs(graph.voices.indexOf(v) - store.index) > 1
+            if (stillFar && state !== 'closed' && v.running) {
+              v.stop()
+            }
+            pendingStops.delete(v)
+          }, STOP_DELAY_MS)
+          pendingStops.set(v, timeoutId)
+        }
         v.gain.gain.setTargetAtTime(near ? mix.gains[i] : 0, now, 0.08)
       })
       graph.filter.frequency.setTargetAtTime(mix.cutoff, now, 0.1)
@@ -253,6 +273,9 @@ export function createAudioEngine({
     dispose() {
       if (state === 'closed') return
       clearInterval(scheduler)
+      // Clear all pending stop timers
+      pendingStops.forEach((timeoutId) => clearTimeout(timeoutId))
+      pendingStops.clear()
       state = 'closed'
       emit()
       if (!ctx) return
