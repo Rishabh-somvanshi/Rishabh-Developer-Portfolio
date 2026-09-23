@@ -485,6 +485,11 @@ html.lenis.lenis-smooth {
   font-size: 0.625rem;
 }
 
+/* 3D labels reuse .moon-label; the 5★ HackerRank meteor burns amber. */
+.moon-label.amber {
+  color: var(--accent);
+}
+
 .moon-caption {
   margin-top: var(--s2);
   color: var(--accent);

@@ -4,6 +4,9 @@ import CameraRig from './CameraRig'
 import Starfield3D from './objects/Starfield3D'
 import Nebula from './objects/Nebula'
 import Worlds from './objects/Worlds'
+import MeteorField from './objects/MeteorField'
+import Supernova from './objects/Supernova'
+import Pulsar from './objects/Pulsar'
 import { SUN_DIR } from './camera/stations'
 import { progress } from './store'
 
@@ -37,7 +40,10 @@ export default function Scene({ reduced }) {
       <Starfield3D />
       <Nebula />
       <Worlds />
-      {/* voyage bodies (Tasks 14–15) */}
+      <MeteorField />
+      <Supernova />
+      <Pulsar />
+      {/* voyage bodies (Task 15) */}
       <Precompile />
     </>
   )
