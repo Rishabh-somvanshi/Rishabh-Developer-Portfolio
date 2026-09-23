@@ -66,8 +66,7 @@ export default function Planet3D({
 
   const atmosphere = useMemo(
     () =>
-      aura &&
-      new ShaderMaterial({
+      aura ? new ShaderMaterial({
         vertexShader: atmosphereVertex,
         fragmentShader: atmosphereFragment,
         uniforms: { uColor: { value: new Color(aura) }, uIntensity: { value: 1 }, uSunDir: { value: sun() } },
@@ -75,20 +74,19 @@ export default function Planet3D({
         depthWrite: false,
         blending: AdditiveBlending,
         side: BackSide,
-      }),
+      }) : null,
     [],
   )
 
   const cloudLayer = useMemo(
     () =>
-      clouds &&
-      new ShaderMaterial({
+      clouds ? new ShaderMaterial({
         vertexShader: planetVertex,
         fragmentShader: cloudsFragment,
         uniforms: { uSunDir: { value: sun() }, uTime: { value: 0 }, uOctaves: { value: 3 } },
         transparent: true,
         depthWrite: false,
-      }),
+      }) : null,
     [],
   )
 
