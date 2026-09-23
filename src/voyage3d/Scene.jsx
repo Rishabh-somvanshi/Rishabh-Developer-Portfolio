@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useThree } from '@react-three/fiber'
 import MotionContext from './MotionContext'
 import CameraRig from './CameraRig'
@@ -17,7 +17,12 @@ import { progress } from './store'
 
 const SUN_POSITION = SUN_DIR.map((c) => c * 100)
 
-/** Compile every material once, while the reader is still on Launch, so no planet hitches on arrival. */
+/**
+ * Compile every material once, while the reader is still on Launch, so no
+ * planet hitches on arrival. Lives inside the same Suspense boundary as the
+ * textured bodies (Worlds, Earth) and after them in tree order, so it only
+ * runs once their textures have resolved and they've actually mounted.
+ */
 function Precompile() {
   const gl = useThree((s) => s.gl)
   const scene = useThree((s) => s.scene)
@@ -44,15 +49,20 @@ export default function Scene({ reduced }) {
       <CameraRig reduced={reduced} />
       <Starfield3D />
       <Nebula />
-      <Worlds />
+      {/* Textured bodies only: stars/nebula/camera render immediately, planets
+          suspend until their WebP textures resolve. Precompile sits after them
+          so gl.compile() sees the real materials, not placeholders. */}
+      <Suspense fallback={null}>
+        <Worlds />
+        <Earth />
+        <Precompile />
+      </Suspense>
       <MeteorField />
       <Supernova />
       <Pulsar />
       <BlackHole />
       {!reduced && <WarpStreaks />}
-      <Earth />
       <Effects />
-      <Precompile />
     </MotionContext.Provider>
   )
 }

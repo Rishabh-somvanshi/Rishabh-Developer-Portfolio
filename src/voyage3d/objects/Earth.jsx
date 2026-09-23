@@ -28,7 +28,15 @@ export default function Earth() {
 
   return (
     <group ref={group}>
-      <Planet3D {...BODIES.earth} palette={EARTH} spin={0.01} bandFreq={0} lights={1} aura="#8fc0b4" clouds />
+      <Planet3D
+        {...BODIES.earth}
+        palette={EARTH}
+        spin={0.01}
+        aura="#8fc0b4"
+        map="/textures/earth_day.webp"
+        nightMap="/textures/earth_night.webp"
+        cloudMap="/textures/earth_clouds.webp"
+      />
       <mesh material={sunrise} position={[-40, -38, -880]}>
         <planeGeometry args={[260, 120]} />
       </mesh>

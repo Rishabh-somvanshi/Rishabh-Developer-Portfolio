@@ -1,13 +1,12 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
+import { Html, useTexture } from '@react-three/drei'
+import { SRGBColorSpace } from 'three'
 import { progress } from '../store'
 import { sceneProgress } from '../sceneWindows'
 import { clamp01, interp } from '../interp'
 import { useStill } from '../MotionContext'
 import { MOON_AWARDS, MOON_RISE } from '../../data/voyage'
-
-const MOON_TONES = ['#b9b9c0', '#a7a7ae', '#8f8f97']
 // Orbit radii, as a multiple of the planet's own radius. The slot the DOM
 // reserves for a framed planet is ~1.6 r wide (see camera/framing.js's FILL),
 // so the widest orbit (1.5 r) plus the moon's own radius still lands inside
@@ -20,10 +19,19 @@ const ORBIT_FACTOR = [1.2, 1.35, 1.5]
  * decorative; the names are also in the card's caption for screen readers
  * and the 2D fallback.
  */
-export default function Moons({ radius }) {
+export default function Moons({ radius, map }) {
   const moons = useRef([])
   const labels = useRef([])
   const still = useStill()
+  const textures = useTexture(map ? { map } : {})
+  const moonTex = textures.map
+
+  useEffect(() => {
+    if (moonTex) {
+      moonTex.colorSpace = SRGBColorSpace
+      moonTex.anisotropy = 4
+    }
+  }, [moonTex])
 
   useFrame((state) => {
     const v = sceneProgress(progress.windows, progress.p, 'mercantile')
@@ -50,7 +58,7 @@ export default function Moons({ radius }) {
   return MOON_AWARDS.map((award, i) => (
     <mesh key={award} ref={(el) => (moons.current[i] = el)}>
       <sphereGeometry args={[radius * 0.13, 32, 24]} />
-      <meshStandardMaterial color={MOON_TONES[i]} roughness={0.9} />
+      <meshStandardMaterial map={moonTex} roughness={0.9} />
       <Html center position={[0, -radius * 0.22, 0]} zIndexRange={[0, 0]} style={{ pointerEvents: 'none' }}>
         <span ref={(el) => (labels.current[i] = el)} className="mono moon-label" aria-hidden="true" style={{ opacity: 0 }}>
           {award}

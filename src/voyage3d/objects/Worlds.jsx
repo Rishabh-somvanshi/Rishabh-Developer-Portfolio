@@ -33,43 +33,46 @@ export default function Worlds() {
           scale={scales.curo}
           palette={PALETTES.curo}
           spin={0.05}
-          bandFreq={3}
-          bandSpeed={0.02}
+          map="/textures/neptune.webp"
+          tint="#6fa398"
+          cloudMap="/textures/earth_clouds.webp"
           aura={PALETTES.curo.aura}
           auraPulseHz={1}
-          clouds
         />
       </VisibleIn>
 
-      {/* Mercantile — the market world: fast bands, city lights, three award moons. */}
+      {/* Mercantile — the market world: city lights, three award moons. */}
       <VisibleIn id="mercantile">
         <Planet3D
           {...BODIES.mercantile}
           scale={scales.mercantile}
           palette={PALETTES.mercantile}
           spin={0.04}
-          bandFreq={14}
-          bandSpeed={0.35}
+          map="/textures/jupiter.webp"
           lights={PALETTES.mercantile.lights}
         >
-          <Moons radius={BODIES.mercantile.radius} />
+          <Moons radius={BODIES.mercantile.radius} map="/textures/moon.webp" />
         </Planet3D>
       </VisibleIn>
 
-      {/* Vault — the fortress world: faceted, seamed, shielded. */}
+      {/* Vault — the fortress world: seamed, shielded, ringed. */}
       <VisibleIn id="vault">
         <Planet3D
           {...BODIES.vault}
           scale={scales.vault}
           palette={PALETTES.vault}
           spin={0.03}
-          flat
           seams
-          bandFreq={4}
-          bandSpeed={0}
+          map="/textures/mercury.webp"
+          tint="#7c98a1"
           onFrame={vaultShield}
         >
-          <Ring radius={BODIES.vault.radius} color={PALETTES.vault.ring} tilt={PALETTES.vault.ringTilt} />
+          <Ring
+            radius={BODIES.vault.radius}
+            color={PALETTES.vault.ring}
+            tilt={PALETTES.vault.ringTilt}
+            map="/textures/saturn_ring.webp"
+          />
         </Planet3D>
       </VisibleIn>
 
@@ -79,8 +82,8 @@ export default function Worlds() {
           {...BODIES.porcelain}
           scale={scales.porcelain}
           palette={PALETTES.porcelain}
+          map="/textures/venus.webp"
           physical={{
-            color: PALETTES.porcelain.top,
             roughness: 0.35,
             clearcoat: 1,
             clearcoatRoughness: 0.08,

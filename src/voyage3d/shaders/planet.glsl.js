@@ -5,8 +5,10 @@ export const planetVertex = /* glsl */ `
 varying vec3 vObjPos;
 varying vec3 vWorldNormal;
 varying vec3 vWorldPos;
+varying vec2 vUv;
 void main() {
   vObjPos = position;
+  vUv = uv;
   vec4 wp = modelMatrix * vec4(position, 1.0);
   vWorldPos = wp.xyz;
   vWorldNormal = normalize(mat3(modelMatrix) * normal);
@@ -15,10 +17,13 @@ void main() {
 `
 
 /**
- * One surface shader for every world: fbm terrain between two palette
- * colours, latitude bands, a real day/night terminator from the one sun, and
- * optional night-side city lights (amber), meridian seams, and a hex shield
- * sweep. uFlat switches to faceted normals for the Vault.
+ * One surface shader for every world: either a photo texture sampled by UV
+ * (uUseMap) or, as a fallback, fbm terrain between two palette colours;
+ * latitude bands only apply in the fbm fallback. A real day/night terminator
+ * from the one sun, limb darkening on textured worlds, optional real
+ * night-side lights (uUseNight, Earth) or synthetic amber city noise
+ * (uLights, Mercantile), meridian seams, and a hex shield sweep all layer on
+ * top of either surface. uFlat switches to faceted normals.
  */
 export const planetFragment = /* glsl */ `
 uniform vec3 uTop;
@@ -33,9 +38,15 @@ uniform float uLights;
 uniform float uSeams;
 uniform float uShield;
 uniform float uFlat;
+uniform sampler2D uMap;
+uniform float uUseMap;
+uniform vec3 uTint;
+uniform sampler2D uNightMap;
+uniform float uUseNight;
 varying vec3 vObjPos;
 varying vec3 vWorldNormal;
 varying vec3 vWorldPos;
+varying vec2 vUv;
 ${NOISE_GLSL}
 
 float hexDist(vec2 p) {
@@ -56,14 +67,29 @@ void main() {
   vec3 n = normalize(vWorldNormal);
   if (uFlat > 0.5) n = normalize(cross(dFdx(vWorldPos), dFdy(vWorldPos)));
   vec3 sp = normalize(vObjPos);
-
-  float f = fbm(sp * 2.2 + vec3(0.0, uTime * 0.01, 0.0), uOctaves);
-  float bands = sin(sp.y * uBandFreq + f * 1.2 + uTime * uBandSpeed) * 0.5 + 0.5;
-  vec3 col = mix(uBottom, uTop, smoothstep(-0.4, 0.6, f));
-  col = mix(col, uBand, smoothstep(0.55, 0.95, bands) * 0.55 * step(0.001, uBandFreq));
+  vec3 viewDir = normalize(cameraPosition - vWorldPos);
 
   float day = smoothstep(-0.12, 0.4, dot(n, normalize(uSunDir)));
+
+  vec3 col;
+  if (uUseMap > 0.5) {
+    col = texture2D(uMap, vUv).rgb * uTint;
+    // Realism comes from rotation only on textured worlds — no fbm morph —
+    // plus limb darkening so the terminator and grazing edges read as a sphere.
+    day *= mix(0.75, 1.0, pow(max(dot(n, viewDir), 0.0), 0.35));
+  } else {
+    float f = fbm(sp * 2.2 + vec3(0.0, uTime * 0.01, 0.0), uOctaves);
+    float bands = sin(sp.y * uBandFreq + f * 1.2 + uTime * uBandSpeed) * 0.5 + 0.5;
+    col = mix(uBottom, uTop, smoothstep(-0.4, 0.6, f));
+    col = mix(col, uBand, smoothstep(0.55, 0.95, bands) * 0.55 * step(0.001, uBandFreq));
+  }
+
   vec3 lit = col * mix(0.035, 1.05, day);
+
+  if (uUseNight > 0.5) {
+    vec3 nightCol = texture2D(uNightMap, vUv).rgb;
+    lit += nightCol * (1.0 - day) * 1.6;
+  }
 
   if (uLights > 0.0) {
     float city = smoothstep(0.72, 0.9, snoise(sp * 38.0)) * (1.0 - day) * uLights;
@@ -83,9 +109,8 @@ void main() {
     lit += vec3(0.62, 0.71, 0.74) * sweep * edge * 1.2;
   }
 
-  vec3 viewDir = normalize(cameraPosition - vWorldPos);
   float rim = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
-  lit += uTop * rim * 0.25 * day;
+  lit += mix(uTop, uTint, step(0.5, uUseMap)) * rim * 0.25 * day;
 
   gl_FragColor = vec4(lit, 1.0);
   #include <tonemapping_fragment>

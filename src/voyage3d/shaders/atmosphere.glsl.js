@@ -17,7 +17,7 @@ uniform vec3 uSunDir;
 varying vec3 vN;
 varying vec3 vV;
 void main() {
-  float f = pow(1.0 - abs(dot(vN, vV)), 2.5);
+  float f = pow(1.0 - abs(dot(vN, vV)), 4.0);
   float lit = smoothstep(-0.3, 0.5, dot(vN, normalize(uSunDir)));
   float a = f * uIntensity * (0.25 + 0.75 * lit);
   gl_FragColor = vec4(uColor * a, a);
