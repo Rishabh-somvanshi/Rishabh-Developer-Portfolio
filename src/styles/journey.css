@@ -81,6 +81,7 @@ html.lenis.lenis-smooth {
 /* shared scene copy */
 .scene-copy {
   position: relative;
+  isolation: isolate;
   max-width: 44rem;
   padding-inline: clamp(1.25rem, 4vw, 2.5rem);
 }
@@ -399,7 +400,16 @@ html.lenis.lenis-smooth {
 
 .world-card {
   position: relative;
+  isolation: isolate;
   max-width: 34rem;
+}
+
+/* Twin-lights' card carries both classes on one element (see TwinLights.jsx),
+   so it already inherits .world-card's scrim — this rule only matters if
+   .study-card-j is ever used on its own. */
+.study-card-j {
+  position: relative;
+  isolation: isolate;
 }
 
 .world-h {
@@ -543,6 +553,7 @@ html.lenis.lenis-smooth {
 
 .manifest {
   position: relative;
+  isolation: isolate;
   width: min(var(--container), 100%);
   padding-inline: clamp(1.25rem, 4vw, 2.5rem);
   text-align: center;
@@ -644,8 +655,37 @@ html.lenis.lenis-smooth {
 
 .home-inner {
   position: relative;
+  isolation: isolate;
   z-index: 2;
   padding-bottom: clamp(16rem, 34vh, 24rem);
+}
+
+/* ---------- text-readability scrim ----------
+   Every voice-over/story text block gets a soft dark vignette behind it so
+   contrast holds no matter what warm planet, moon, or star field the WebGL
+   canvas puts behind it. Pure paint — a radial gradient, no blur or
+   backdrop-filter — the cheapest thing that reads as depth, and each block
+   above already gives itself `position: relative; isolation: isolate` so the
+   ::before's `z-index: -1` sits behind that block's own content without
+   dropping behind unrelated siblings or ancestors. `.reentry-stats` doesn't
+   need its own entry: it always renders inside a `.scene-copy` (see
+   Reentry.jsx), so that block's scrim already covers it. */
+.world-card::before,
+.study-card-j::before,
+.scene-copy::before,
+.manifest::before,
+.home-inner::before {
+  content: '';
+  position: absolute;
+  inset: -2rem -2.5rem;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(10, 10, 11, 0.78) 0%,
+    rgba(10, 10, 11, 0.55) 45%,
+    rgba(10, 10, 11, 0) 75%
+  );
 }
 
 .home-h {
@@ -806,6 +846,22 @@ html.lenis.lenis-smooth {
 
   .hud-dot-label {
     display: none;
+  }
+
+  /* Stronger scrim on phones: smaller planets sit closer behind the text
+     column (no side-by-side grid), so the same 0.78/0.55 fade reads lighter
+     relative to the body copy than it does on desktop. */
+  .world-card::before,
+  .study-card-j::before,
+  .scene-copy::before,
+  .manifest::before,
+  .home-inner::before {
+    background: radial-gradient(
+      ellipse at center,
+      rgba(10, 10, 11, 0.86) 0%,
+      rgba(10, 10, 11, 0.6) 45%,
+      rgba(10, 10, 11, 0) 75%
+    );
   }
 }
 

@@ -23,7 +23,7 @@ export default function Nebula() {
     if (!still) material.uniforms.uTime.value += delta
   })
   return (
-    <mesh position={[0, 0, -1100]} material={material}>
+    <mesh position={[0, 0, -1400]} material={material}>
       <planeGeometry args={[2400, 1600]} />
     </mesh>
   )

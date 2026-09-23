@@ -19,8 +19,13 @@ void main() {
   float mask = smoothstep(0.55, 1.0, n * 0.7 + n2 * 0.5);
   float edge = smoothstep(0.0, 0.35, vUv.x) * smoothstep(1.0, 0.65, vUv.x)
              * smoothstep(0.0, 0.35, vUv.y) * smoothstep(1.0, 0.65, vUv.y);
+  // Bias the veil away from the screen's centre band, where the text cards
+  // sit: fade it out toward vUv 0.5,0.5 and only let it show near the
+  // plane's outer thirds, so no soft light shape sits directly behind copy.
+  float centerDist = length(vUv - vec2(0.5));
+  float centerBias = smoothstep(0.12, 0.42, centerDist);
   vec3 col = mix(vec3(0.91, 0.58, 0.16), vec3(0.44, 0.64, 0.6), n2);
-  gl_FragColor = vec4(col, mask * edge * 0.1);
+  gl_FragColor = vec4(col, mask * edge * centerBias * 0.03);
   #include <colorspace_fragment>
 }
 `
