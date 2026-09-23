@@ -229,9 +229,15 @@ if (existsSync(distAssetsDir) && existsSync(distIndexPath)) {
   const shell = jsFiles.find((f) => f.startsWith('Journey-'))
   const world = jsFiles.find((f) => f.startsWith('World-'))
 
-  if (!entryName) fail('could not find the entry <script> in dist/index.html')
-  else if (withThree.includes(entryName)) fail(`entry chunk ${entryName} contains three.js`)
-  else pass(`entry chunk ${entryName} is three-free`)
+  if (!entryName) {
+    fail('could not find the entry <script> in dist/index.html')
+  } else if (!existsSync(join(distAssetsDir, entryName))) {
+    fail(`entry chunk ${entryName} referenced by dist/index.html is missing from dist/assets`)
+  } else if (withThree.includes(entryName)) {
+    fail(`entry chunk ${entryName} contains three.js`)
+  } else {
+    pass(`entry chunk ${entryName} is three-free`)
+  }
 
   if (!shell) fail('no Journey-*.js chunk: the voyage is not lazy-loaded')
   else if (withThree.includes(shell)) fail(`voyage shell ${shell} contains three.js`)
@@ -246,14 +252,16 @@ if (existsSync(distAssetsDir) && existsSync(distIndexPath)) {
     else fail(`3D world ${kb(worldTotal)} gz exceeds ${kb(WORLD_BUDGET)}`)
   }
 
-  if (entryName && existsSync(baselinePath)) {
+  if (entryName && existsSync(join(distAssetsDir, entryName)) && existsSync(baselinePath)) {
     const now = gz(join(distAssetsDir, entryName))
     const before = gz(baselinePath)
     if (now < before) pass(`résumé entry ${kb(now)} gz < pre-rebuild ${kb(before)} gz`)
     else fail(`résumé entry ${kb(now)} gz is not smaller than pre-rebuild ${kb(before)} gz`)
-  } else if (entryName) {
+  } else if (entryName && existsSync(join(distAssetsDir, entryName))) {
     fail(`baseline ${baselinePath} missing`)
   }
+} else {
+  fail('bundle budgets skipped: dist/assets or dist/index.html missing — run "npm run build" first')
 }
 
 /* ---------------------------------------------------------------------- *
