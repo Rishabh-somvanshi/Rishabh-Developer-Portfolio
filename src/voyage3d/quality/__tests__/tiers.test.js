@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { TIER_SETTINGS, initialTier, stepTier, createFpsGovernor } from '../tiers'
+import { TIER_SETTINGS, initialTier, stepTier, createFpsGovernor, tierOverride } from '../tiers'
 
 const both = { canUp: true, canDown: true }
 const run = (gov, fps, ms, opts = both) => {
@@ -22,6 +22,22 @@ describe('tier settings', () => {
     expect(stepTier('low', 'down')).toBe('low')
     expect(stepTier('low', 'up')).toBe('medium')
     expect(stepTier('high', 'up')).toBe('high')
+  })
+})
+
+describe('tierOverride', () => {
+  it('reads a valid ?tier= value', () => {
+    expect(tierOverride('?tier=low')).toBe('low')
+    expect(tierOverride('?tier=medium')).toBe('medium')
+    expect(tierOverride('?tier=high')).toBe('high')
+  })
+  it('rejects an invalid value', () => {
+    expect(tierOverride('?tier=ultra')).toBeNull()
+    expect(tierOverride('?tier=')).toBeNull()
+  })
+  it('is null when absent', () => {
+    expect(tierOverride('')).toBeNull()
+    expect(tierOverride('?debug')).toBeNull()
   })
 })
 

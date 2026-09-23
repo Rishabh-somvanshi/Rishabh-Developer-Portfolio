@@ -12,6 +12,16 @@ export function initialTier({ coarse }) {
   return coarse ? 'low' : 'medium'
 }
 
+/**
+ * Reads `?tier=low|medium|high` from a location.search string, for pinning
+ * the tier during colour-pipeline verification (B2). Anything else — absent,
+ * misspelled, unsupported — is null, so the caller falls back to initialTier.
+ */
+export function tierOverride(search) {
+  const value = new URLSearchParams(search).get('tier')
+  return TIER_ORDER.includes(value) ? value : null
+}
+
 export function stepTier(tier, direction) {
   const i = TIER_ORDER.indexOf(tier) + (direction === 'up' ? 1 : -1)
   return TIER_ORDER[Math.min(Math.max(i, 0), TIER_ORDER.length - 1)]
