@@ -13,6 +13,7 @@ import {
   readStoredMode,
   writeStoredMode,
 } from './lib/viewMode'
+import { primeAudio } from './voyage3d/audio/context'
 
 // The voyage is opt-in and heavy (the 3D world lazy-loads a second chunk of its
 // own). The résumé view never downloads any of it.
@@ -87,6 +88,9 @@ export default function App() {
   }
 
   const enterVoyage = () => {
+    // Must run synchronously inside the click: it's the user gesture the
+    // browser requires before audio may start. The engine adopts it later.
+    primeAudio()
     setMode('voyage')
     writeStoredMode('voyage')
     window.history.replaceState(null, '', VOYAGE_HASH)

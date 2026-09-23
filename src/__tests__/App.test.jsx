@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, cleanup } from '@testing-library/react'
+import { render, cleanup, fireEvent } from '@testing-library/react'
 import App from '../App'
+import { FakeAudioContext } from '../voyage3d/audio/__tests__/fakeAudioContext'
 import { readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -45,6 +46,7 @@ beforeEach(() => {
     },
   )
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(makeFakeCanvasContext())
+  window.scrollTo = vi.fn()
 })
 
 afterEach(() => {
@@ -127,5 +129,16 @@ describe('voyage code splitting', () => {
     setHash('#voyage')
     const { findByText } = render(<App />)
     expect(await findByText(/Scroll to begin the voyage/i)).toBeTruthy()
+  })
+})
+
+describe('audio priming', () => {
+  it('creates the audio context inside the "voyage" click, while it still counts as a gesture', () => {
+    FakeAudioContext.instances = []
+    vi.stubGlobal('AudioContext', FakeAudioContext)
+    const { getAllByRole } = render(<App />)
+    fireEvent.click(getAllByRole('button', { name: /voyage/i })[0])
+    expect(FakeAudioContext.instances).toHaveLength(1)
+    vi.unstubAllGlobals()
   })
 })

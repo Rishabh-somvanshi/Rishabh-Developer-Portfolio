@@ -1016,6 +1016,49 @@ html.lenis.lenis-smooth {
   padding: var(--s3) var(--s2) var(--s2);
 }
 
+/* ---------- sound toggle ---------- */
+.hud-sound {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  margin-right: var(--s2);
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+.hud-sound:hover,
+.hud-sound:focus-visible,
+.hud-sound[aria-pressed='true'] {
+  color: var(--text);
+}
+
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.eq i {
+  width: 2px;
+  height: 100%;
+  background: var(--accent);
+  transform: scaleY(0.25);
+  transform-origin: bottom;
+}
+
+@media (max-width: 560px) {
+  .hud-sound-label {
+    display: none;
+  }
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
   .world-stage {

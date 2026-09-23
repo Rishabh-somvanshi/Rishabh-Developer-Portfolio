@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { scrollTo as lenisScrollTo } from './lenisController'
+import SoundToggle from '../voyage3d/audio/SoundToggle'
 
 export const SCENES = [
   { id: 'launch', label: 'Launch' },
@@ -15,7 +16,7 @@ export const SCENES = [
 ]
 
 /** Voyage HUD — logo, skip lane, and the constellation progress rail. */
-export default function Hud({ onSkip }) {
+export default function Hud({ onSkip, engine }) {
   const [active, setActive] = useState(0)
   const ticking = useRef(false)
 
@@ -69,6 +70,7 @@ export default function Hud({ onSkip }) {
         >
           rs<span className="dot">.</span>
         </button>
+        {engine && engine.getSnapshot().state !== 'unsupported' && <SoundToggle engine={engine} />}
         <button className="hud-skip mono" onClick={onSkip} type="button">
           Résumé view →
         </button>
