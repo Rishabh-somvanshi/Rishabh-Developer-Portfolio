@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Html, useTexture } from '@react-three/drei'
+import { useTexture } from '@react-three/drei'
 import { SRGBColorSpace } from 'three'
 import { progress } from '../store'
 import { sceneProgress } from '../sceneWindows'
-import { clamp01, interp } from '../interp'
+import { clamp01 } from '../interp'
 import { useStill } from '../MotionContext'
 import { MOON_AWARDS, MOON_RISE } from '../../data/voyage'
 // Orbit radii, as a multiple of the planet's own radius. The slot the DOM
@@ -15,13 +15,12 @@ const ORBIT_FACTOR = [1.2, 1.35, 1.5]
 
 /**
  * Three award moons rise into orbit one by one as the reader arrives at
- * Mercantile (same rise times as the old DOM moons). The labels are
- * decorative; the names are also in the card's caption for screen readers
- * and the 2D fallback.
+ * Mercantile (same rise times as the old DOM moons). No in-scene labels —
+ * at the tighter 30° lens they'd sit on top of the planet — the award names
+ * live in the card's caption for screen readers and the 2D fallback.
  */
 export default function Moons({ radius, map }) {
   const moons = useRef([])
-  const labels = useRef([])
   const still = useStill()
   const textures = useTexture(map ? { map } : {})
   const moonTex = textures.map
@@ -35,7 +34,6 @@ export default function Moons({ radius, map }) {
 
   useFrame((state) => {
     const v = sceneProgress(progress.windows, progress.p, 'mercantile')
-    const presence = interp(v, [-0.3, 0, 1, 1.3], [0, 1, 1, 0])
     // Orbit angle is self-driven (t); rise (v, above) is scroll-driven and stays.
     const t = still ? 0 : state.clock.elapsedTime
     MOON_AWARDS.forEach((_, i) => {
@@ -50,8 +48,6 @@ export default function Moons({ radius, map }) {
         Math.sin(a) * orbit * 0.35,
       )
       moon.scale.setScalar(Math.max(rise, 0.0001))
-      const label = labels.current[i]
-      if (label) label.style.opacity = String(rise * presence)
     })
   })
 
@@ -59,11 +55,6 @@ export default function Moons({ radius, map }) {
     <mesh key={award} ref={(el) => (moons.current[i] = el)}>
       <sphereGeometry args={[radius * 0.13, 32, 24]} />
       <meshStandardMaterial map={moonTex} roughness={0.9} />
-      <Html center position={[0, -radius * 0.22, 0]} zIndexRange={[0, 0]} style={{ pointerEvents: 'none' }}>
-        <span ref={(el) => (labels.current[i] = el)} className="mono moon-label" aria-hidden="true" style={{ opacity: 0 }}>
-          {award}
-        </span>
-      </Html>
     </mesh>
   ))
 }

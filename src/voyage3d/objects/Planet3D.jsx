@@ -9,8 +9,6 @@ import { useQuality } from '../quality/QualityProvider'
 import { useStill } from '../MotionContext'
 import { SUN_DIR } from '../camera/stations'
 
-const sun = () => new Vector3(...SUN_DIR)
-
 /**
  * A world's surface. `map` (a URL) switches the shader from procedural fbm
  * to a photo texture sampled by sphere UV — realism then comes from
@@ -21,7 +19,8 @@ const sun = () => new Vector3(...SUN_DIR)
  * spin with the surface. `physical` swaps the shader for a
  * MeshPhysicalMaterial (Porcelain's glaze) — `map` still applies to it.
  * `onFrame(material, t)` lets a world drive its own uniforms from scroll
- * (the Vault's shield).
+ * (the Vault's shield). `sunDir` overrides the one global sun for a single
+ * world (Earth, seen mostly night-side at dawn) — defaults to SUN_DIR.
  */
 export default function Planet3D({
   center,
@@ -41,6 +40,7 @@ export default function Planet3D({
   nightMap = null,
   cloudMap = null,
   physical = null,
+  sunDir = SUN_DIR,
   onFrame,
   children,
 }) {
@@ -48,6 +48,7 @@ export default function Planet3D({
   const still = useStill()
   const spinRef = useRef()
   const cloudRef = useRef()
+  const sun = () => new Vector3(...sunDir)
 
   const urls = useMemo(() => {
     const u = {}
