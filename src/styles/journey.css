@@ -78,19 +78,6 @@ html.lenis.lenis-smooth {
   justify-content: center;
 }
 
-.float-slow {
-  animation: floaty 7s ease-in-out infinite;
-}
-
-.float-slower {
-  animation: floaty 11s ease-in-out infinite;
-}
-
-@keyframes floaty {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-14px) rotate(-1.2deg); }
-}
-
 /* shared scene copy */
 .scene-copy {
   position: relative;
@@ -363,83 +350,6 @@ html.lenis.lenis-smooth {
   100% { transform: scaleY(1) translateY(18px); opacity: 0; }
 }
 
-/* ---------- origin field: labeled meteors ---------- */
-.meteor-field {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.meteor-slot {
-  position: absolute;
-}
-
-.meteor-rot {
-  transform-origin: left center;
-}
-
-.meteor {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.meteor-tail {
-  display: block;
-  height: 2.5px;
-  border-radius: 2px;
-  background: linear-gradient(to left, rgba(237, 237, 239, 0.9), rgba(237, 237, 239, 0));
-}
-
-.meteor-head {
-  position: absolute;
-  right: -8px;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 38%, #ffffff, #ededef 45%, rgba(237, 237, 239, 0.16) 78%, transparent);
-}
-
-.meteor-glow {
-  position: absolute;
-  right: -18px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(237, 237, 239, 0.4), transparent 68%);
-  animation: meteor-pulse 2.4s ease-in-out infinite;
-}
-
-@keyframes meteor-pulse {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.18); }
-}
-
-.meteor.amber .meteor-tail {
-  background: linear-gradient(to left, rgba(245, 169, 61, 0.95), rgba(245, 169, 61, 0));
-}
-
-.meteor.amber .meteor-head {
-  background: radial-gradient(circle at 40% 38%, #fff3e0, #f5a93d 45%, rgba(232, 148, 42, 0.2) 78%, transparent);
-}
-
-.meteor.amber .meteor-glow {
-  background: radial-gradient(circle, rgba(232, 148, 42, 0.45), transparent 68%);
-}
-
-.meteor-label {
-  position: absolute;
-  right: -16px;
-  top: 20px;
-  white-space: nowrap;
-  color: var(--text-2);
-  text-shadow: 0 2px 8px rgba(10, 10, 11, 0.9);
-}
-
-.meteor-label.amber {
-  color: var(--accent);
-}
-
 /* ---------- world scenes ---------- */
 .world-stage {
   display: grid;
@@ -466,15 +376,16 @@ html.lenis.lenis-smooth {
   height: auto;
 }
 
-.planet-aura {
-  animation: aura-pulse 2.6s ease-in-out infinite;
-  transform-origin: center;
-  transform-box: fill-box;
+/* The slot the 3D camera frames each world into (see voyage3d/camera/framing.js).
+   Width comes from the .planet rules above and at every breakpoint. */
+.planet-slot {
+  aspect-ratio: 1;
 }
 
-@keyframes aura-pulse {
-  0%, 100% { opacity: 0.55; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.045); }
+/* Twin-lights slots: the same box the CSS supernova and pulsar used to fill. */
+.twin-slot {
+  width: clamp(220px, 30vw, 380px);
+  aspect-ratio: 1;
 }
 
 .world-tag {
@@ -565,22 +476,6 @@ html.lenis.lenis-smooth {
   margin-top: var(--s2);
 }
 
-/* moons — the three awards */
-.moons {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.moon {
-  position: absolute;
-  width: clamp(30px, 3.4vw, 44px);
-}
-
-.moon-0 { top: 4%; left: 8%; }
-.moon-1 { top: -6%; right: 14%; }
-.moon-2 { bottom: 10%; right: -4%; }
-
 .moon-label {
   display: block;
   margin-top: 0.25rem;
@@ -612,174 +507,9 @@ html.lenis.lenis-smooth {
   margin-top: var(--s2);
 }
 
-.nova {
-  position: relative;
-  width: clamp(220px, 30vw, 380px);
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-}
-
-.nova > * {
-  position: absolute;
-  border-radius: 50%;
-}
-
-.nova-core {
-  width: 26%;
-  aspect-ratio: 1;
-  background: radial-gradient(circle, #fff7ea 0%, #f5a93d 34%, rgba(232, 148, 42, 0.25) 68%, transparent 100%);
-  box-shadow: 0 0 60px 18px rgba(232, 148, 42, 0.35);
-}
-
-.nova-ring {
-  width: 88%;
-  aspect-ratio: 1;
-  border: 1.5px solid rgba(232, 148, 42, 0.6);
-}
-
-.nova-flare {
-  background: linear-gradient(90deg, transparent, rgba(245, 169, 61, 0.8), transparent);
-  border-radius: 2px;
-}
-
-.nova-flare.h {
-  width: 120%;
-  height: 1.5px;
-}
-
-.nova-flare.v {
-  width: 1.5px;
-  height: 120%;
-}
-
-.nova-rays {
-  width: 100%;
-  aspect-ratio: 1;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg 4deg, rgba(232, 148, 42, 0.05) 8deg,
-    transparent 12deg 48deg, rgba(232, 148, 42, 0.07) 52deg,
-    transparent 56deg 118deg, rgba(232, 148, 42, 0.05) 122deg,
-    transparent 126deg 208deg, rgba(232, 148, 42, 0.06) 212deg,
-    transparent 216deg 302deg, rgba(232, 148, 42, 0.05) 306deg,
-    transparent 310deg 360deg
-  );
-  animation: spin 40s linear infinite;
-}
-
-.pulsar {
-  position: relative;
-  width: clamp(220px, 30vw, 380px);
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-}
-
-.pulsar > * {
-  position: absolute;
-  border-radius: 50%;
-}
-
-.pulsar-core {
-  width: 10%;
-  aspect-ratio: 1;
-  background: radial-gradient(circle, #ffffff 0%, #ededef 40%, rgba(237, 237, 239, 0.2) 100%);
-  box-shadow: 0 0 34px 8px rgba(237, 237, 239, 0.4);
-}
-
-.pulsar-beam {
-  width: 100%;
-  aspect-ratio: 1;
-  background: conic-gradient(
-    from 0deg,
-    rgba(245, 169, 61, 0.5) 0deg 10deg,
-    transparent 13deg 177deg,
-    rgba(245, 169, 61, 0.5) 180deg 190deg,
-    transparent 193deg 357deg,
-    rgba(245, 169, 61, 0.5) 360deg
-  );
-  animation: spin 3.2s linear infinite;
-  will-change: transform;
-}
-
-.pulsar-ping {
-  width: 40%;
-  aspect-ratio: 1;
-  border: 1px solid rgba(237, 237, 239, 0.35);
-  animation: ping 1.6s var(--ease) infinite;
-}
-
-.pulsar-ping.p2 {
-  animation-delay: 0.8s;
-}
-
-@keyframes ping {
-  0% { transform: scale(0.35); opacity: 0.9; }
-  100% { transform: scale(1.6); opacity: 0; }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 /* ---------- singularity ---------- */
 .sing-stage {
   flex-direction: column;
-}
-
-.bh {
-  position: absolute;
-  top: 30%;
-  left: 50%;
-  translate: -50% -50%;
-  width: clamp(200px, 26vw, 340px);
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-}
-
-.bh > * {
-  position: absolute;
-  border-radius: 50%;
-}
-
-.bh-core {
-  width: 52%;
-  aspect-ratio: 1;
-  background: #000;
-  box-shadow: 0 0 40px 6px rgba(0, 0, 0, 0.9);
-}
-
-.bh-photon {
-  width: 56%;
-  aspect-ratio: 1;
-  border: 2px solid rgba(245, 169, 61, 0.9);
-  box-shadow: 0 0 24px 4px rgba(232, 148, 42, 0.45), inset 0 0 18px rgba(232, 148, 42, 0.35);
-}
-
-.bh-disk {
-  width: 118%;
-  aspect-ratio: 1;
-  transform: rotateX(72deg);
-  background: conic-gradient(
-    from 40deg,
-    rgba(232, 148, 42, 0) 0deg,
-    rgba(232, 148, 42, 0.18) 60deg,
-    rgba(245, 169, 61, 0.75) 150deg,
-    rgba(255, 214, 156, 0.9) 195deg,
-    rgba(232, 148, 42, 0.3) 280deg,
-    rgba(232, 148, 42, 0) 360deg
-  );
-  animation: spin 14s linear infinite;
-  will-change: transform;
-}
-
-.bh-lens {
-  width: 96%;
-  aspect-ratio: 1;
-  border: 2px solid rgba(245, 169, 61, 0.13);
-  transform: rotate(-16deg) scaleY(0.55);
 }
 
 .sing-astronaut {
@@ -965,54 +695,6 @@ html.lenis.lenis-smooth {
   pointer-events: none;
 }
 
-.earth::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 3.5rem;
-  width: 240vw;
-  height: 240vw;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 4%, #35606b 0%, #22434e 16%, #12262e 38%, #08080a 72%);
-  box-shadow: 0 -1px 0 rgba(143, 192, 180, 0.55), 0 -18px 60px rgba(111, 163, 152, 0.28);
-}
-
-.earth-sunrise {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-58%);
-  top: 0.5rem;
-  width: 70vw;
-  height: 8rem;
-  background: radial-gradient(
-    ellipse 50% 100% at 50% 100%,
-    rgba(232, 148, 42, 0.4) 0%,
-    rgba(232, 148, 42, 0.22) 38%,
-    rgba(232, 148, 42, 0.08) 60%,
-    transparent 78%
-  );
-}
-
-.earth-lights {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow:
-    18px 6px 0 -1px rgba(232, 148, 42, 0.8),
-    -26px 10px 0 -1.5px rgba(232, 148, 42, 0.6),
-    52px 16px 0 -1.5px rgba(232, 148, 42, 0.7),
-    -60px 22px 0 -2px rgba(232, 148, 42, 0.5);
-  opacity: 0.85;
-}
-
-.earth-lights.l1 { left: 22%; top: 5.2rem; }
-.earth-lights.l2 { left: 46%; top: 4.4rem; }
-.earth-lights.l3 { left: 66%; top: 5rem; }
-.earth-lights.l4 { left: 84%; top: 6.4rem; opacity: 0.5; }
-
 .earth-astronaut {
   position: absolute;
   left: clamp(8%, 14vw, 18%);
@@ -1181,26 +863,6 @@ html.lenis.lenis-smooth {
      the field's bottom edge stays pinned at the original 33svh mark
      (7svh + 26svh) regardless of where the top lands — that's what
      preserves the ~3svh gap before .origins-copy at margin-top: 36svh. */
-  .origins-stage .meteor-field {
-    top: max(7svh, 91px);
-    height: calc(33svh - max(7svh, 91px));
-    inset-inline: 0;
-    bottom: auto;
-  }
-
-  .origins-stage .meteor-rot {
-    transform-origin: left center;
-  }
-
-  .origins-stage .meteor {
-    scale: 0.72;
-  }
-
-  .origins-stage .meteor-label {
-    font-size: 0.625rem;
-    top: 16px;
-  }
-
   .origins-copy {
     margin-top: 36svh;
     padding-top: 0;
@@ -1260,16 +922,6 @@ html.lenis.lenis-smooth {
   .manifest-card li {
     font-size: var(--fs-xs);
   }
-
-  /* .hud-rail sits at `right: clamp(0.375rem, 1.5vw, 1.125rem)` with 26px
-     dots — at 375px wide that's roughly x 343–369. The mercantile world's
-     award moons hug the right edge by design (moon-2's own base/desktop
-     value is right: -4%, deliberately bleeding off-canvas); their old
-     mobile offsets (4% / 0%, i.e. right edges at x 360 / x 375) land
-     squarely inside that zone. Pulled in to 13% / 11% (right edges at
-     roughly x 326 / x 334) so both clear the rail with room to spare. */
-  .moon-1 { right: 13%; }
-  .moon-2 { right: 11%; }
 
   .hud-rail {
     right: 0.125rem;
@@ -1350,8 +1002,6 @@ html.lenis.lenis-smooth {
      An earlier revision clamped .world-log to two lines, hid the secondary
      outcome sentence, and capped the tag row at two. All three are
      deliberately not done here. */
-  .beat .nova,
-  .beat .pulsar,
   .beat .world-visual {
     display: none;
   }
@@ -1540,45 +1190,6 @@ html.lenis.lenis-smooth {
 @media (prefers-reduced-motion: reduce) {
   .voyage-atmosphere::after {
     opacity: 0.14;
-  }
-}
-
-/* The far side of the accretion disk, lensed up and over the event horizon —
-   the shape that makes the silhouette read as Gargantua rather than a ring.
-   A bordered ellipse clipped to its top half; no blur, no animation. */
-.bh-arc {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 59%;
-  aspect-ratio: 200/116;
-  translate: -50% -50%;
-  border-radius: 50%;
-  border-top: 3px solid rgba(255, 214, 148, 0.78);
-  border-left: 2px solid rgba(245, 169, 61, 0.34);
-  border-right: 2px solid rgba(245, 169, 61, 0.34);
-  border-bottom: none;
-  clip-path: inset(0 0 46% 0);
-  pointer-events: none;
-}
-
-@media (max-width: 760px) {
-  /* Phones do the least well with large composited glows, and they are where the
-     lag was most obvious. Drop the widest, softest layers — nova-rays
-     (0.05–0.07 alpha) and bh-lens (0.13 alpha) cost more than they contribute
-     at phone size. pulsar-beam is deliberately left off this list, i.e. it
-     keeps rendering on phones: it's the element that visually reads as
-     "pulsar" (a rotating beam up to 0.5 alpha), and now that its
-     filter: blur(3px) has been removed it's just a conic-gradient driven by
-     animation: spin with will-change: transform — compositor-only, so it's
-     cheap even on phones. */
-  .nova-rays,
-  .bh-lens {
-    display: none;
-  }
-
-  .bh-disk {
-    animation-duration: 26s;
   }
 }
 

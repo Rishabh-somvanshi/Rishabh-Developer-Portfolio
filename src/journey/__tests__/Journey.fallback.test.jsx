@@ -40,4 +40,11 @@ describe('voyage without WebGL (jsdom)', () => {
     const { queryByRole } = render(<Journey onSkip={() => {}} />)
     expect(queryByRole('button', { name: 'Sound' })).toBeNull()
   })
+
+  it('keeps the award names in text, and reserves every 3D slot', () => {
+    const { getByText, container } = render(<Journey onSkip={() => {}} />)
+    getByText(/Three moons rose in six months — Applause · Best Performer · On-The-Spot\./)
+    const slots = [...container.querySelectorAll('[data-slot]')].map((el) => el.dataset.slot).sort()
+    expect(slots).toEqual(['curo', 'mercantile', 'nova', 'porcelain', 'pulsar', 'vault'])
+  })
 })

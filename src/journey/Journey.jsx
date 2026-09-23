@@ -10,7 +10,6 @@ import TwinLights from './TwinLights'
 import Singularity from './Singularity'
 import Reentry from './Reentry'
 import Home from './Home'
-import { WORLD_VISUALS } from './Planet'
 import { WORLDS, SCENE_IDS } from '../data/voyage'
 import { isCoarsePointer } from './hooks'
 import { setLenis } from './lenisController'
@@ -175,7 +174,7 @@ export default function Journey({ onSkip }) {
       <main>
         <Launch onSkip={onSkip} />
         {WORLDS.map((w) => (
-          <WorldScene key={w.id} {...w} visual={WORLD_VISUALS[w.id]} />
+          <WorldScene key={w.id} {...w} />
         ))}
         <Origins />
         <TwinLights />

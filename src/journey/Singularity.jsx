@@ -4,18 +4,6 @@ import Astronaut from './Astronaut'
 import { skills } from '../data/content'
 import { wellCurve } from '../voyage3d/fxCurves'
 
-function BlackHole({ scale, opacity }) {
-  return (
-    <m.div className="bh" style={{ scale, opacity }} aria-hidden="true">
-      <span className="bh-disk" />
-      <span className="bh-photon" />
-      <span className="bh-core" />
-      <span className="bh-arc" />
-      <span className="bh-lens" />
-    </m.div>
-  )
-}
-
 /**
  * Scene 8 — THE SINGULARITY. The hardest problems have gravity.
  * Beat A: approach — time dilates, the starfield bends.
@@ -32,9 +20,6 @@ export default function Singularity({ fx, reduced }) {
     fx.current.wellY = 0.42
   })
 
-  const bhScale = useTransform(p, [0.01, 0.24, 0.48, 0.6], [0.5, 1, 1, 0.34])
-  const bhO = useTransform(p, [0, 0.06, 0.52, 0.63], [0, 1, 1, 0.18])
-
   const copyO = useTransform(p, [0.03, 0.12, 0.32, 0.4], [0, 1, 1, 0])
   const spread = useTransform(p, [0.05, 0.4], ['0.14em', '0.62em'])
   const spreadO = useTransform(p, [0.07, 0.16, 0.38, 0.44], [0, 1, 1, 0])
@@ -50,8 +35,6 @@ export default function Singularity({ fx, reduced }) {
   return (
     <section ref={ref} id="singularity" className="scn" style={{ height }}>
       <div className="scn-stage sing-stage">
-        <BlackHole scale={bhScale} opacity={bhO} />
-
         <m.div className="sing-astronaut" style={{ y: astY, scale: astS, scaleY: astSY, opacity: astO }}>
           <Astronaut pose="drift" />
         </m.div>

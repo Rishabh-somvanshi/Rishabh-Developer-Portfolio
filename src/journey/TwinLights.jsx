@@ -6,36 +6,6 @@ import { IconArrow } from '../components/Reveal'
 const wedding = studies[0]
 const expense = studies[1]
 
-function Supernova({ p }) {
-  // detonation driven by scroll
-  const ring1 = useTransform(p, [0.18, 0.4], [0.15, 1.5])
-  const ring1o = useTransform(p, [0.18, 0.28, 0.44], [0, 0.8, 0])
-  const ring2 = useTransform(p, [0.22, 0.48], [0.1, 1.9])
-  const ring2o = useTransform(p, [0.22, 0.32, 0.5], [0, 0.55, 0])
-  const core = useTransform(p, [0.16, 0.26, 0.48], [0.4, 1.18, 1])
-  return (
-    <div className="nova" aria-hidden="true">
-      <m.span className="nova-ring" style={{ scale: ring1, opacity: ring1o }} />
-      <m.span className="nova-ring" style={{ scale: ring2, opacity: ring2o }} />
-      <m.span className="nova-core" style={{ scale: core }} />
-      <span className="nova-flare h" />
-      <span className="nova-flare v" />
-      <span className="nova-rays" />
-    </div>
-  )
-}
-
-function Pulsar() {
-  return (
-    <div className="pulsar" aria-hidden="true">
-      <span className="pulsar-beam" />
-      <span className="pulsar-core" />
-      <span className="pulsar-ping p1" />
-      <span className="pulsar-ping p2" />
-    </div>
-  )
-}
-
 function StudyCard({ s, log }) {
   return (
     <div className="world-card study-card-j">
@@ -85,7 +55,7 @@ export default function TwinLights() {
 
         <m.div className="beat world-stage" style={{ opacity: beatAO, y: beatAY }}>
           <div className="world-visual">
-            <Supernova p={p} />
+            <div className="twin-slot" data-slot="nova" aria-hidden="true" />
             <div className="world-tag mono">Supernova · went off beautifully</div>
           </div>
           <StudyCard
@@ -96,7 +66,7 @@ export default function TwinLights() {
 
         <m.div className="beat world-stage flip" style={{ opacity: beatBO, y: beatBY }}>
           <div className="world-visual">
-            <Pulsar />
+            <div className="twin-slot" data-slot="pulsar" aria-hidden="true" />
             <div className="world-tag mono">Pulsar · keeps perfect time</div>
           </div>
           <StudyCard

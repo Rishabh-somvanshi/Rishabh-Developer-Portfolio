@@ -54,16 +54,11 @@ export default function Home({ onSkip }) {
       </div>
 
       <div className="earth" aria-hidden="true">
-        <span className="earth-sunrise" />
-        <span className="earth-lights l1" />
-        <span className="earth-lights l2" />
-        <span className="earth-lights l3" />
-        <span className="earth-lights l4" />
         <Astronaut pose="stand" className="earth-astronaut" />
       </div>
 
       <footer className="home-footer mono" aria-label="Footer">
-        © 2026 {identity.name} · Voyage designed &amp; built by hand · React + Framer Motion
+        © 2026 {identity.name} · Voyage designed &amp; built by hand · React Three Fiber · Web Audio
       </footer>
     </section>
   )
