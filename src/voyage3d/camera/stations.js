@@ -30,7 +30,7 @@ export const FIXED_STATIONS = {
   launch: { position: [0, 0, 40], target: [0, 0, -60] },
   origins: { position: [0, 0, -340], target: [0, 0, -400] },
   stars: { position: [0, 0, -410], target: [0, 0, -470] },
-  singularity: { position: [0, 5, -495], target: [0, 0, -540] },
+  singularity: { position: [0, -3, -495], target: [0, -8, -540] },
   reentry: { position: [30, -10, -590], target: [0, -40, -680] },
   home: { position: [0, -32, -690], target: [0, -45, -800] },
 }

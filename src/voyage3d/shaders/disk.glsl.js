@@ -29,6 +29,6 @@ void main() {
   vec3 col = mix(vec3(0.91, 0.45, 0.12), vec3(1.0, 0.86, 0.62), pow(temp, 1.5));
   float doppler = 1.0 + 0.6 * sin(ang - 0.4);
   float a = smoothstep(0.0, 0.08, t) * smoothstep(1.0, 0.6, t) * streaks * uOpacity;
-  gl_FragColor = vec4(col * doppler * (0.6 + temp * 1.6), a);
+  gl_FragColor = vec4(col * doppler * (0.35 + temp * 0.9), a * 0.85);
 }
 `

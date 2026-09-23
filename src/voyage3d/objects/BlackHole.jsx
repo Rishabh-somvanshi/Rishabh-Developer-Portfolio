@@ -14,15 +14,16 @@ import { BODIES } from '../camera/stations'
 const { center, radius: HORIZON } = BODIES.blackHole
 const INNER = HORIZON * 1.3
 const OUTER = HORIZON * 3.2
+const SIZE = 0.55 // overall size — the retired CSS black hole was ≤ 340px wide
 
-const disk = (upperOnly) =>
+const disk = (upperOnly, outer) =>
   new ShaderMaterial({
     vertexShader: diskVertex,
     fragmentShader: diskFragment,
     uniforms: {
       uTime: { value: 0 },
       uInner: { value: INNER },
-      uOuter: { value: OUTER },
+      uOuter: { value: outer },
       uUpperOnly: { value: upperOnly ? 1 : 0 },
       uOpacity: { value: 1 },
     },
@@ -41,7 +42,7 @@ export default function BlackHole() {
   const { settings } = useQuality()
   const group = useRef()
   const halo = useRef()
-  const mats = useMemo(() => ({ flat: disk(false), arc: disk(true) }), [])
+  const mats = useMemo(() => ({ flat: disk(false, OUTER), arc: disk(true, OUTER * 0.8) }), [])
   const glow = useMemo(
     () =>
       new ShaderMaterial({
@@ -66,7 +67,7 @@ export default function BlackHole() {
 
   useFrame((state, delta) => {
     const v = sceneProgress(progress.windows, progress.p, 'singularity')
-    group.current.scale.setScalar(interp(v, [0.01, 0.24, 0.48, 0.6], [0.5, 1, 1, 0.34]))
+    group.current.scale.setScalar(SIZE * interp(v, [0.01, 0.24, 0.48, 0.6], [0.5, 1, 1, 0.34]))
     const t = state.clock.elapsedTime
     mats.flat.uniforms.uTime.value = t
     mats.arc.uniforms.uTime.value = t
