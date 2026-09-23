@@ -69,6 +69,23 @@ describe('audio engine', () => {
     expect(engine.getSnapshot().state).toBe('running')
   })
 
+  it('does not claim "running" when the browser refuses to resume (e.g. a touch scroll swipe: pointerdown → pointercancel is not a granted gesture)', async () => {
+    class RefusingAudioContext extends FakeAudioContext {
+      constructor() {
+        super()
+        this.state = 'suspended'
+        this.resume = vi.fn(() => Promise.reject(new Error('resume refused')))
+      }
+    }
+    const { engine } = make({ AudioContextImpl: RefusingAudioContext })
+    engine.startFromGesture()
+    // Flush the rejected resume() promise.
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(engine.getSnapshot().needsGesture).toBe(true)
+    expect(engine.getSnapshot().state).not.toBe('running')
+  })
+
   it('adopts the context primed by the entry click instead of making another', () => {
     const primed = new FakeAudioContext()
     const { engine } = make({ primed })

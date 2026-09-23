@@ -73,8 +73,11 @@ export default function Journey({ onSkip }) {
   }, [])
 
   // Deep links arrive without a gesture: the first click/tap/key anywhere
-  // starts the sound. The toggle and the M key handle themselves, so they are
-  // skipped here — otherwise one press would start and immediately mute.
+  // starts the sound. Browsers grant audio activation on pointerup/keydown
+  // (touch in particular refuses it on pointerdown — a scroll swipe is
+  // pointerdown → pointercancel, not a gesture). The toggle and the M key
+  // handle themselves, so they are skipped here — otherwise one press would
+  // start and immediately mute.
   useEffect(() => {
     if (!engine) return undefined
     const onGesture = (e) => {
@@ -83,11 +86,11 @@ export default function Journey({ onSkip }) {
       engine.startFromGesture()
     }
     const onVisibility = () => engine.onVisibility(document.hidden)
-    window.addEventListener('pointerdown', onGesture)
+    window.addEventListener('pointerup', onGesture)
     window.addEventListener('keydown', onGesture)
     document.addEventListener('visibilitychange', onVisibility)
     return () => {
-      window.removeEventListener('pointerdown', onGesture)
+      window.removeEventListener('pointerup', onGesture)
       window.removeEventListener('keydown', onGesture)
       document.removeEventListener('visibilitychange', onVisibility)
     }

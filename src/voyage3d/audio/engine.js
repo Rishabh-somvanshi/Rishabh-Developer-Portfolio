@@ -142,6 +142,18 @@ export function createAudioEngine({
   function adopt(context) {
     ctx = context
     graph = build(ctx)
+    // The browser can change the context's state on its own (system media
+    // controls, another tab claiming exclusive audio, etc). Re-sync our
+    // state from it rather than trusting only our own transitions.
+    ctx.onstatechange = () => {
+      if (muted || state === 'closed') return
+      if (ctx.state === 'running') {
+        state = 'running'
+      } else if (ctx.state === 'suspended' && !document.hidden) {
+        state = 'idle'
+      }
+      emit()
+    }
     scheduler = setInterval(() => {
       if (state !== 'running') return
       const now = ctx.currentTime
@@ -162,19 +174,50 @@ export function createAudioEngine({
   }
 
   function play(fadeSeconds) {
-    ctx.resume?.()
-    state = 'running'
-    fadeTo(1, fadeSeconds)
+    // Browsers grant audio activation only on certain gesture events
+    // (pointerup/click/keydown — not pointerdown, and not every event on
+    // touch). resume() can be refused; when it is, ctx.state stays whatever
+    // it already was, and we must not claim 'running' anyway.
+    const resumed = ctx.resume?.()
+    state = ctx.state === 'running' ? 'running' : 'idle'
+    if (state === 'running') fadeTo(1, fadeSeconds)
+    resumed
+      ?.then(() => {
+        if (ctx.state === 'running' && !muted && state !== 'closed') {
+          state = 'running'
+          fadeTo(1, fadeSeconds)
+        }
+        emit()
+      })
+      .catch(() => {})
   }
 
   if (primed) {
     adopt(primed)
     if (muted) {
-      ctx.suspend?.()
+      ctx.suspend?.()?.catch(() => {})
       state = 'suspended'
     } else {
       play(3)
     }
+  }
+
+  function setMuted(next) {
+    if (state === 'closed' || state === 'unsupported') return
+    muted = next
+    writeSoundPref(storage, next ? 'off' : 'on')
+    if (next) {
+      if (ctx && state === 'running') {
+        fadeTo(0, 0.3)
+        state = 'suspended'
+        setTimeout(() => {
+          if (muted) ctx.suspend?.()?.catch(() => {})
+        }, 320)
+      }
+    } else if (ensureContext()) {
+      play(0.3)
+    }
+    emit()
   }
 
   return {
@@ -191,26 +234,10 @@ export function createAudioEngine({
       emit()
     },
 
-    setMuted(next) {
-      if (state === 'closed' || state === 'unsupported') return
-      muted = next
-      writeSoundPref(storage, next ? 'off' : 'on')
-      if (next) {
-        if (ctx && state === 'running') {
-          fadeTo(0, 0.3)
-          state = 'suspended'
-          setTimeout(() => {
-            if (muted) ctx.suspend?.()
-          }, 320)
-        }
-      } else if (ensureContext()) {
-        play(0.3)
-      }
-      emit()
-    },
+    setMuted,
 
     toggleMuted() {
-      this.setMuted(!muted)
+      setMuted(!muted)
     },
 
     onVisibility(hidden) {
@@ -219,7 +246,7 @@ export function createAudioEngine({
         fadeTo(0, 0.2)
         state = 'suspended'
         setTimeout(() => {
-          if (state === 'suspended') ctx.suspend?.()
+          if (state === 'suspended') ctx.suspend?.()?.catch(() => {})
         }, 220)
       } else {
         play(0.5)
@@ -290,7 +317,7 @@ export function createAudioEngine({
         }
         g.voices.forEach((v) => v.dispose())
         g.bed.dispose()
-        closing.close?.()
+        closing.close?.()?.catch(() => {})
       }, 520)
     },
   }
