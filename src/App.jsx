@@ -6,6 +6,7 @@ import Experience from './components/Experience'
 import CaseStudies from './components/CaseStudies'
 import Skills from './components/Skills'
 import Contact from './components/Contact'
+import ChunkErrorBoundary from './components/ChunkErrorBoundary'
 import { identity } from './data/content'
 import {
   VOYAGE_HASH,
@@ -104,9 +105,11 @@ export default function App() {
             <button className="skip-link" onClick={exitVoyage} type="button">
               Skip to content
             </button>
-            <Suspense fallback={<div className="journey" aria-busy="true" />}>
-              <Journey onSkip={exitVoyage} />
-            </Suspense>
+            <ChunkErrorBoundary onError={exitVoyage}>
+              <Suspense fallback={<div className="journey" aria-busy="true" />}>
+                <Journey onSkip={exitVoyage} />
+              </Suspense>
+            </ChunkErrorBoundary>
           </>
         ) : (
           <>
