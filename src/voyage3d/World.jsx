@@ -46,7 +46,7 @@ export default function World({ reduced, onFail }) {
       aria-hidden="true"
       dpr={dpr}
       flat
-      gl={{ antialias: false, powerPreference: 'high-performance' }}
+      gl={{ antialias: true, powerPreference: 'high-performance' }}
       camera={{ fov: CAMERA_FOV, near: 0.1, far: 3000, position: [0, 0, 40] }}
       onCreated={({ gl }) => watchContextLoss(gl, onFail)}
     >

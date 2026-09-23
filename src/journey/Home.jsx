@@ -58,7 +58,12 @@ export default function Home({ onSkip }) {
       </div>
 
       <footer className="home-footer mono" aria-label="Footer">
-        © 2026 {identity.name} · Voyage designed &amp; built by hand · React Three Fiber · Web Audio
+        © 2026 {identity.name} · Voyage designed &amp; built by hand · React Three Fiber · Web Audio ·{' '}
+        Planet textures:{' '}
+        <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener noreferrer">
+          Solar System Scope
+        </a>{' '}
+        (CC BY 4.0)
       </footer>
     </section>
   )

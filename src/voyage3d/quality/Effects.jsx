@@ -80,7 +80,7 @@ export default function Effects() {
   const { settings } = useQuality()
   if (!settings.bloom) return null
   return (
-    <EffectComposer multisampling={0}>
+    <EffectComposer multisampling={settings.msaa}>
       <Bloom
         mipmapBlur
         intensity={0.9}
