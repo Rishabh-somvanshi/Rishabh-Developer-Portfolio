@@ -19,3 +19,4 @@ ziD32jC0
 
 # netlify CLI/deploy scratch
 .netlify/
+.textures-src/
