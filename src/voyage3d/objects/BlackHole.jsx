@@ -8,13 +8,12 @@ import { useQuality } from '../quality/QualityProvider'
 import { useSceneVisibility } from '../useSceneVisibility'
 import { progress } from '../store'
 import { sceneProgress } from '../sceneWindows'
-import { interp } from '../interp'
+import { blackHoleScale } from '../blackHoleScale'
 import { BODIES } from '../camera/stations'
 
 const { center, radius: HORIZON } = BODIES.blackHole
 const INNER = HORIZON * 1.3
 const OUTER = HORIZON * 3.2
-const SIZE = 0.55 // overall size — the retired CSS black hole was ≤ 340px wide
 
 const disk = (upperOnly, outer) =>
   new ShaderMaterial({
@@ -67,7 +66,7 @@ export default function BlackHole() {
 
   useFrame((state, delta) => {
     const v = sceneProgress(progress.windows, progress.p, 'singularity')
-    group.current.scale.setScalar(SIZE * interp(v, [0.01, 0.24, 0.48, 0.6], [0.5, 1, 1, 0.34]))
+    group.current.scale.setScalar(blackHoleScale(v))
     const t = state.clock.elapsedTime
     mats.flat.uniforms.uTime.value = t
     mats.arc.uniforms.uTime.value = t

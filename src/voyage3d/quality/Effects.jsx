@@ -7,6 +7,7 @@ import { useQuality } from './QualityProvider'
 import { progress } from '../store'
 import { sceneProgress } from '../sceneWindows'
 import { wellCurve } from '../fxCurves'
+import { blackHoleScale } from '../blackHoleScale'
 import { BODIES } from '../camera/stations'
 
 /**
@@ -50,7 +51,7 @@ class LensingEffect extends Effect {
 }
 
 const HOLE = new Vector3(...BODIES.blackHole.center)
-const LENS_REACH = 4 // lens radius in horizon radii
+const LENS_REACH = 4 // lens radius in rendered-horizon radii
 
 function Lensing() {
   const effect = useMemo(() => new LensingEffect(), [])
@@ -60,14 +61,15 @@ function Lensing() {
   useFrame(({ camera, size }) => {
     const u = effect.uniforms
     projected.copy(HOLE).project(camera)
-    const inView = projected.z > -1 && projected.z < 1
     const v = sceneProgress(progress.windows, progress.p, 'singularity')
+    const horizon = BODIES.blackHole.radius * blackHoleScale(v)
+    const inView = projected.z > -1 && projected.z < 1 && Math.abs(projected.x) < 1.5 && Math.abs(projected.y) < 1.5
     u.get('uStrength').value = inView ? wellCurve(v) : 0
     u.get('uCenter').value.set((projected.x + 1) / 2, (projected.y + 1) / 2)
     u.get('uAspect').value = size.width / size.height
     const dist = camera.position.distanceTo(HOLE)
     const tanHalf = Math.tan(((camera.fov * Math.PI) / 180) / 2)
-    u.get('uRadius').value = ((BODIES.blackHole.radius * LENS_REACH) / (dist * tanHalf)) / 2
+    u.get('uRadius').value = ((horizon * LENS_REACH) / (dist * tanHalf)) / 2
   })
 
   return <primitive object={effect} dispose={null} />

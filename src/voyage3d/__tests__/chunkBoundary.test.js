@@ -13,6 +13,7 @@ const SHELL_SIDE = [
   '../store.js',
   '../sceneWindows.js',
   '../interp.js',
+  '../blackHoleScale.js',
   '../fxCurves.js',
   '../webgl.js',
   '../WebGLBoundary.jsx',
