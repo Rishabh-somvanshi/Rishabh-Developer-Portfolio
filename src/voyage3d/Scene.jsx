@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useThree } from '@react-three/fiber'
+import MotionContext from './MotionContext'
 import CameraRig from './CameraRig'
 import Starfield3D from './objects/Starfield3D'
 import Nebula from './objects/Nebula'
@@ -37,7 +38,7 @@ function Precompile() {
 
 export default function Scene({ reduced }) {
   return (
-    <>
+    <MotionContext.Provider value={reduced}>
       <directionalLight position={SUN_POSITION} intensity={2.2} color="#fff1dc" />
       <ambientLight intensity={0.05} />
       <CameraRig reduced={reduced} />
@@ -52,6 +53,6 @@ export default function Scene({ reduced }) {
       <Earth />
       <Effects />
       <Precompile />
-    </>
+    </MotionContext.Provider>
   )
 }

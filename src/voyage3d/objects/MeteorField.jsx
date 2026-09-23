@@ -4,6 +4,7 @@ import { Html } from '@react-three/drei'
 import { AdditiveBlending, BufferAttribute, BufferGeometry, ShaderMaterial, Vector3 } from 'three'
 import { streaksVertex, streaksFragment } from '../shaders/streaks.glsl'
 import { useQuality } from '../quality/QualityProvider'
+import { useStill } from '../MotionContext'
 import { useSceneVisibility } from '../useSceneVisibility'
 import { progress } from '../store'
 import { sceneProgress } from '../sceneWindows'
@@ -27,7 +28,7 @@ const LABELLED = [
   { offset: [-15, -5, 6], speed: 1.2 },
 ]
 
-function Shower({ count, trail }) {
+function Shower({ count, trail, still }) {
   const data = useMemo(() => {
     const rand = mulberry32(11)
     const base = new Float32Array(count * 3)
@@ -75,7 +76,9 @@ function Shower({ count, trail }) {
   const ref = useRef()
   useFrame((state) => {
     if (!ref.current?.parent?.visible) return
-    const t = state.clock.elapsedTime
+    // Reduced motion: hold every meteor at its t=0 position (still varied by
+    // phase, not clumped at the origin) instead of sweeping it along DIR.
+    const t = still ? 0 : state.clock.elapsedTime
     const pos = data.geometry.attributes.position.array
     for (let i = 0; i < count; i++) {
       const s = ((t * data.speed[i] + data.phase[i]) % PATH) - PATH / 2
@@ -125,12 +128,13 @@ function LabelledMeteor({ label, amber, offset, speed, labelRef }) {
 /** Origin field: a background meteor shower plus the four labelled fundamentals. */
 export default function MeteorField() {
   const { settings } = useQuality()
+  const still = useStill()
   const group = useRef()
   const labels = [useRef(), useRef(), useRef(), useRef()]
   useSceneVisibility(group, ['origins'])
   return (
     <group ref={group}>
-      <Shower count={settings.meteors} trail={settings.trail} />
+      <Shower count={settings.meteors} trail={settings.trail} still={still} />
       {ORIGIN_METEORS.map((m, i) => (
         <LabelledMeteor key={m.label} {...m} {...LABELLED[i]} labelRef={labels[i]} />
       ))}

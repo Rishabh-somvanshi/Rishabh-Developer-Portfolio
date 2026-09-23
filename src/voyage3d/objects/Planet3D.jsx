@@ -5,6 +5,7 @@ import { planetVertex, planetFragment } from '../shaders/planet.glsl'
 import { atmosphereVertex, atmosphereFragment } from '../shaders/atmosphere.glsl'
 import { cloudsFragment } from '../shaders/clouds.glsl'
 import { useQuality } from '../quality/QualityProvider'
+import { useStill } from '../MotionContext'
 import { SUN_DIR } from '../camera/stations'
 
 const sun = () => new Vector3(...SUN_DIR)
@@ -34,6 +35,7 @@ export default function Planet3D({
   children,
 }) {
   const { settings } = useQuality()
+  const still = useStill()
   const spinRef = useRef()
 
   const surface = useMemo(
@@ -100,7 +102,10 @@ export default function Planet3D({
   )
 
   useFrame((state, delta) => {
-    const t = state.clock.elapsedTime
+    // Reduced motion holds the surface/cloud/aura animation at its t=0 frame
+    // instead of advancing it (B3) — spin is gated separately since it's an
+    // incremental rotation, not driven off this same clock read.
+    const t = still ? 0 : state.clock.elapsedTime
     if (surface) {
       surface.uniforms.uTime.value = t
       surface.uniforms.uOctaves.value = settings.octaves
@@ -112,7 +117,7 @@ export default function Planet3D({
     if (atmosphere && auraPulseHz) {
       atmosphere.uniforms.uIntensity.value = 0.85 + 0.25 * Math.sin(t * Math.PI * 2 * auraPulseHz)
     }
-    if (spinRef.current) spinRef.current.rotation.y += delta * spin
+    if (spinRef.current && !still) spinRef.current.rotation.y += delta * spin
     onFrame?.(surface, t)
   })
 

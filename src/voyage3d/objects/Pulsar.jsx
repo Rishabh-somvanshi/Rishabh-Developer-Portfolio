@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { AdditiveBlending, Color, DoubleSide, ShaderMaterial } from 'three'
 import { beamVertex, beamFragment } from '../shaders/beam.glsl'
 import { useLayout } from '../LayoutProvider'
+import { useStill } from '../MotionContext'
 import { useSceneVisibility } from '../useSceneVisibility'
 import { progress } from '../store'
 import { sceneProgress } from '../sceneWindows'
@@ -18,6 +19,7 @@ const OMEGA = (Math.PI * 2) / PULSAR_PERIOD_S
  */
 export default function Pulsar() {
   const { twin } = useLayout()
+  const still = useStill()
   const group = useRef()
   const spin = useRef()
   const core = useRef()
@@ -45,7 +47,7 @@ export default function Pulsar() {
     const beat = interp(v, [0.58, 0.64, 0.96, 1], [0, 1, 1, 0])
     material.uniforms.uOpacity.value = beat
     core.current.scale.setScalar(Math.max(beat, 0.0001))
-    spin.current.rotation.y += delta * OMEGA
+    if (!still) spin.current.rotation.y += delta * OMEGA
   })
 
   if (!twin.pulsar) return null

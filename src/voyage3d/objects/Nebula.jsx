@@ -2,9 +2,11 @@ import { useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { ShaderMaterial } from 'three'
 import { nebulaVertex, nebulaFragment } from '../shaders/nebula.glsl'
+import { useStill } from '../MotionContext'
 
 /** A faint amber-teal veil at the far end of the voyage, behind everything. */
 export default function Nebula() {
+  const still = useStill()
   const material = useMemo(
     () =>
       new ShaderMaterial({
@@ -18,7 +20,7 @@ export default function Nebula() {
   )
   useEffect(() => () => material.dispose(), [material])
   useFrame((_, delta) => {
-    material.uniforms.uTime.value += delta
+    if (!still) material.uniforms.uTime.value += delta
   })
   return (
     <mesh position={[0, 0, -1100]} material={material}>

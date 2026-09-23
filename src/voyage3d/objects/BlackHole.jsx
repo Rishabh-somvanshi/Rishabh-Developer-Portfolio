@@ -5,6 +5,7 @@ import { AdditiveBlending, Color, DoubleSide, ShaderMaterial } from 'three'
 import { diskVertex, diskFragment } from '../shaders/disk.glsl'
 import { glowVertex, glowFragment } from '../shaders/glow.glsl'
 import { useQuality } from '../quality/QualityProvider'
+import { useStill } from '../MotionContext'
 import { useSceneVisibility } from '../useSceneVisibility'
 import { progress } from '../store'
 import { sceneProgress } from '../sceneWindows'
@@ -39,6 +40,7 @@ const disk = (upperOnly, outer) =>
  */
 export default function BlackHole() {
   const { settings } = useQuality()
+  const still = useStill()
   const group = useRef()
   const halo = useRef()
   const mats = useMemo(() => ({ flat: disk(false, OUTER), arc: disk(true, OUTER * 0.8) }), [])
@@ -67,10 +69,11 @@ export default function BlackHole() {
   useFrame((state, delta) => {
     const v = sceneProgress(progress.windows, progress.p, 'singularity')
     group.current.scale.setScalar(blackHoleScale(v))
-    const t = state.clock.elapsedTime
+    // Disk streaks are self-driven off uTime; the group scale above (v) is scroll-driven and stays.
+    const t = still ? 0 : state.clock.elapsedTime
     mats.flat.uniforms.uTime.value = t
     mats.arc.uniforms.uTime.value = t
-    if (halo.current && settings.lensing === 'sprite') halo.current.rotation.z += delta * 0.2
+    if (halo.current && settings.lensing === 'sprite' && !still) halo.current.rotation.z += delta * 0.2
   })
 
   return (

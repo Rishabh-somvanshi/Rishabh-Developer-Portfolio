@@ -3,11 +3,13 @@ import { useFrame } from '@react-three/fiber'
 import { AdditiveBlending, BufferAttribute, BufferGeometry, ShaderMaterial } from 'three'
 import { starsVertex, starsFragment } from '../shaders/stars.glsl'
 import { useQuality } from '../quality/QualityProvider'
+import { useStill } from '../MotionContext'
 import { mulberry32 } from '../random'
 
 /** Every star along the whole voyage, in one draw call. 6% burn amber, as in the 2D field. */
 export default function Starfield3D() {
   const { settings } = useQuality()
+  const still = useStill()
   const count = settings.stars
 
   const geometry = useMemo(() => {
@@ -49,7 +51,7 @@ export default function Starfield3D() {
   useEffect(() => () => material.dispose(), [material])
 
   useFrame((state, delta) => {
-    material.uniforms.uTime.value += delta
+    if (!still) material.uniforms.uTime.value += delta
     material.uniforms.uPixelRatio.value = state.gl.getPixelRatio()
   })
 

@@ -4,6 +4,7 @@ import { Html } from '@react-three/drei'
 import { progress } from '../store'
 import { sceneProgress } from '../sceneWindows'
 import { clamp01, interp } from '../interp'
+import { useStill } from '../MotionContext'
 import { MOON_AWARDS, MOON_RISE } from '../../data/voyage'
 
 const MOON_TONES = ['#b9b9c0', '#a7a7ae', '#8f8f97']
@@ -17,11 +18,13 @@ const MOON_TONES = ['#b9b9c0', '#a7a7ae', '#8f8f97']
 export default function Moons({ radius }) {
   const moons = useRef([])
   const labels = useRef([])
+  const still = useStill()
 
   useFrame((state) => {
     const v = sceneProgress(progress.windows, progress.p, 'mercantile')
     const presence = interp(v, [-0.3, 0, 1, 1.3], [0, 1, 1, 0])
-    const t = state.clock.elapsedTime
+    // Orbit angle is self-driven (t); rise (v, above) is scroll-driven and stays.
+    const t = still ? 0 : state.clock.elapsedTime
     MOON_AWARDS.forEach((_, i) => {
       const moon = moons.current[i]
       if (!moon) return
