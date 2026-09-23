@@ -16,23 +16,25 @@ export default function CameraRig({ reduced }) {
   const camera = useThree((s) => s.camera)
   const pos = useMemo(() => new Vector3(), [])
   const look = useMemo(() => new Vector3(), [])
-  const smoothLook = useRef(null)
+  const smoothLook = useMemo(() => new Vector3(), [])
+  const initialised = useRef(false)
 
   useFrame((_, delta) => {
     const s = reduced ? cameraSReduced(progress, N) : cameraS(progress, N)
     const u = s / (N - 1)
     curves.position.getPoint(u, pos)
     curves.target.getPoint(u, look)
-    if (reduced || !smoothLook.current) {
+    if (reduced || !initialised.current) {
       camera.position.copy(pos)
-      smoothLook.current = look.clone()
+      smoothLook.copy(look)
+      initialised.current = true
     } else {
       // Lenis already smooths desktop scroll; this only settles touch scrolling and HUD jumps.
       const k = 1 - Math.exp(-delta * 6)
       camera.position.lerp(pos, k)
-      smoothLook.current.lerp(look, k)
+      smoothLook.lerp(look, k)
     }
-    camera.lookAt(smoothLook.current)
+    camera.lookAt(smoothLook)
   })
 
   return null
