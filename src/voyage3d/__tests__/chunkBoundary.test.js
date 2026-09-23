@@ -16,6 +16,7 @@ const SHELL_SIDE = [
   '../fxCurves.js',
   '../webgl.js',
   '../WebGLBoundary.jsx',
+  '../random.js',
   '../camera/path.js',
   '../camera/framing.js',
   '../camera/stations.js',

@@ -20,6 +20,7 @@ function watchContextLoss(gl, onFail) {
   let timer = null
   canvas.addEventListener('webglcontextlost', (e) => {
     e.preventDefault()
+    clearTimeout(timer)
     timer = setTimeout(onFail, 2000)
   })
   canvas.addEventListener('webglcontextrestored', () => clearTimeout(timer))
