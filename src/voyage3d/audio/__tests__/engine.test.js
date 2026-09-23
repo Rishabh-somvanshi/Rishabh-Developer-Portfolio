@@ -189,6 +189,68 @@ describe('audio engine', () => {
     vi.advanceTimersByTime(600)
     expect(primed.close).toHaveBeenCalled()
   })
+
+  it('a late resume does not revive a hidden engine', async () => {
+    let resolveResume
+    class SlowResumeAudioContext extends FakeAudioContext {
+      constructor() {
+        super()
+        this.state = 'suspended'
+        this.resume = vi.fn(
+          () =>
+            new Promise((resolve) => {
+              resolveResume = () => {
+                this.state = 'running'
+                resolve()
+              }
+            })
+        )
+      }
+    }
+    const { engine } = make({ AudioContextImpl: SlowResumeAudioContext })
+    engine.startFromGesture()
+    engine.onVisibility(true)
+
+    resolveResume()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(engine.getSnapshot().state).not.toBe('running')
+
+    const ctx = FakeAudioContext.instances[FakeAudioContext.instances.length - 1]
+    vi.advanceTimersByTime(300)
+    expect(ctx.suspend).toHaveBeenCalled()
+  })
+
+  it('onstatechange cannot revive a hidden engine', () => {
+    const primed = new FakeAudioContext()
+    const { engine } = make({ primed })
+    engine.onVisibility(true)
+
+    primed.state = 'running'
+    primed.onstatechange()
+
+    expect(engine.getSnapshot().state).not.toBe('running')
+  })
+
+  it('onstatechange promotes a visible, unmuted engine once the context is really running', () => {
+    class StaysSuspendedAudioContext extends FakeAudioContext {
+      constructor() {
+        super()
+        this.state = 'suspended'
+        this.resume = vi.fn(() => Promise.resolve())
+      }
+    }
+    const { engine } = make({ AudioContextImpl: StaysSuspendedAudioContext })
+    engine.startFromGesture()
+    expect(engine.getSnapshot().needsGesture).toBe(true)
+
+    const ctx = FakeAudioContext.instances[FakeAudioContext.instances.length - 1]
+    ctx.state = 'running'
+    ctx.onstatechange()
+
+    expect(engine.getSnapshot().state).toBe('running')
+  })
 })
 
 describe('primeAudio', () => {

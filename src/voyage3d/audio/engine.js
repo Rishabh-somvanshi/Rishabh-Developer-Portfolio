@@ -61,6 +61,7 @@ export function createAudioEngine({
   let ctx = null
   let graph = null
   let scheduler = null
+  let tabHidden = false
   const listeners = new Set()
   const pendingStops = new Map() // voice → setTimeout id
 
@@ -147,7 +148,7 @@ export function createAudioEngine({
     // state from it rather than trusting only our own transitions.
     ctx.onstatechange = () => {
       if (muted || state === 'closed') return
-      if (ctx.state === 'running') {
+      if (ctx.state === 'running' && !tabHidden) {
         state = 'running'
       } else if (ctx.state === 'suspended' && !document.hidden) {
         state = 'idle'
@@ -183,7 +184,7 @@ export function createAudioEngine({
     if (state === 'running') fadeTo(1, fadeSeconds)
     resumed
       ?.then(() => {
-        if (ctx.state === 'running' && !muted && state !== 'closed') {
+        if (ctx.state === 'running' && !muted && state !== 'closed' && !tabHidden) {
           state = 'running'
           fadeTo(1, fadeSeconds)
         }
@@ -241,6 +242,7 @@ export function createAudioEngine({
     },
 
     onVisibility(hidden) {
+      tabHidden = hidden
       if (!ctx || muted || state === 'closed') return
       if (hidden) {
         fadeTo(0, 0.2)
