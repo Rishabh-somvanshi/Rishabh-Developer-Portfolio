@@ -72,19 +72,24 @@ void main() {
   float day = smoothstep(-0.12, 0.4, dot(n, normalize(uSunDir)));
 
   vec3 col;
+  float litFactor;
   if (uUseMap > 0.5) {
     col = texture2D(uMap, vUv).rgb * uTint;
     // Realism comes from rotation only on textured worlds — no fbm morph —
     // plus limb darkening so the terminator and grazing edges read as a sphere.
     day *= mix(0.75, 1.0, pow(max(dot(n, viewDir), 0.0), 0.35));
+    // Textured worlds are photo albedo already — never multiply past it, so
+    // the day side reads as lit terrain, not a blown-out wash.
+    litFactor = 0.02 + 0.95 * day;
   } else {
     float f = fbm(sp * 2.2 + vec3(0.0, uTime * 0.01, 0.0), uOctaves);
     float bands = sin(sp.y * uBandFreq + f * 1.2 + uTime * uBandSpeed) * 0.5 + 0.5;
     col = mix(uBottom, uTop, smoothstep(-0.4, 0.6, f));
     col = mix(col, uBand, smoothstep(0.55, 0.95, bands) * 0.55 * step(0.001, uBandFreq));
+    litFactor = mix(0.035, 1.05, day);
   }
 
-  vec3 lit = col * mix(0.035, 1.05, day);
+  vec3 lit = col * litFactor;
 
   if (uUseNight > 0.5) {
     vec3 nightCol = texture2D(uNightMap, vUv).rgb;

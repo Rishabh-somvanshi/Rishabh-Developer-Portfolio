@@ -6,8 +6,9 @@ const normalize = (v) => {
   return v.map((c) => c / l)
 }
 
-/** One distant sun lights every body: upper-left, slightly toward the viewer. */
-export const SUN_DIR = normalize([-0.6, 0.35, 0.72])
+/** One distant sun lights every body: upper-left, more from the side than the
+ * viewer so each world shows a real terminator instead of face-on daylight. */
+export const SUN_DIR = normalize([-0.75, 0.3, 0.45])
 
 /**
  * World layout. The path runs down −z and spirals in toward Earth — the way

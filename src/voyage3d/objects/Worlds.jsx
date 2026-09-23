@@ -84,9 +84,9 @@ export default function Worlds() {
           palette={PALETTES.porcelain}
           map="/textures/venus.webp"
           physical={{
-            roughness: 0.35,
+            roughness: 0.5,
             clearcoat: 1,
-            clearcoatRoughness: 0.08,
+            clearcoatRoughness: 0.25,
             iridescence: 0.3,
             iridescenceIOR: 1.3,
             sheen: 0.4,

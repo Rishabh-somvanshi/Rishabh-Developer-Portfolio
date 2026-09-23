@@ -49,7 +49,7 @@ export default function BlackHole() {
       new ShaderMaterial({
         vertexShader: glowVertex,
         fragmentShader: glowFragment,
-        uniforms: { uColor: { value: new Color('#f5a93d') }, uIntensity: { value: 0.5 }, uRing: { value: 0.3 } },
+        uniforms: { uColor: { value: new Color('#f5a93d') }, uIntensity: { value: 0.25 }, uRing: { value: 0.3 } },
         transparent: true,
         depthWrite: false,
         blending: AdditiveBlending,
