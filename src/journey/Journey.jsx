@@ -129,10 +129,12 @@ export default function Journey({ onSkip }) {
       if (!alive) return
       const vh = window.innerHeight
       maxScroll.current = document.documentElement.scrollHeight - vh
-      const stage = document.querySelector('.scn-stage')
       setMeasure(progress, {
         windows: computeWindows(measureSections(SCENE_IDS), maxScroll.current, vh),
-        viewport: { w: window.innerWidth, h: stage?.clientHeight || vh },
+        // The canvas is position: fixed; inset: 0, so its true height is the
+        // layout viewport (innerHeight), not .scn-stage's 100svh — those two
+        // diverge once the mobile URL bar collapses (B4).
+        viewport: { w: window.innerWidth, h: window.innerHeight },
         slots: measureSlots(),
       })
     }
