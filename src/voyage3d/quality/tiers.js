@@ -22,12 +22,18 @@ export function stepTier(tier, direction) {
  * sustained outside the comfortable band. Frame time is smoothed (EMA) so a
  * single GC hitch neither triggers nor resets anything. After `maxSwitches`
  * changes it locks, so a device on the edge doesn't ping-pong forever.
+ *
+ * One-way ratchet on 'up': once the governor has stepped down (the device
+ * couldn't sustain the tier it was on), it never steps back up again — only
+ * further downs until it locks. Without this, up → down → up re-locks onto
+ * the exact tier that just failed (A2).
  */
 export function createFpsGovernor({ upFps = 55, upMs = 3000, downFps = 40, downMs = 2000, maxSwitches = 3 } = {}) {
   let ema = null
   let above = 0
   let below = 0
   let switches = 0
+  let steppedDown = false
 
   return {
     get locked() {
@@ -49,7 +55,7 @@ export function createFpsGovernor({ upFps = 55, upMs = 3000, downFps = 40, downM
       }
       if (above >= upMs) {
         above = 0
-        if (!canUp) return null
+        if (!canUp || steppedDown) return null
         switches++
         return 'up'
       }
@@ -57,6 +63,7 @@ export function createFpsGovernor({ upFps = 55, upMs = 3000, downFps = 40, downM
         below = 0
         if (!canDown) return null
         switches++
+        steppedDown = true
         return 'down'
       }
       return null

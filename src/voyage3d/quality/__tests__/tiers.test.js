@@ -55,10 +55,22 @@ describe('createFpsGovernor', () => {
   it('locks after 3 switches', () => {
     const gov = createFpsGovernor()
     // Later runs are longer: the smoothed frame time takes a few hundred ms to cross each threshold.
+    // Once a 'down' has happened, 'up' is disallowed (A2), so this sequence
+    // uses three downs — still a possible real trajectory for a struggling device.
+    expect(run(gov, 30, 3000)).toBe('down')
+    expect(run(gov, 30, 3000)).toBe('down')
+    expect(run(gov, 30, 3000)).toBe('down')
+    expect(gov.locked).toBe(true)
+    expect(run(gov, 60, 5000)).toBeNull()
+  })
+
+  it('never steps up again once it has stepped down (A2: no locking onto an unsustainable tier)', () => {
+    const gov = createFpsGovernor()
     expect(run(gov, 60, 3300)).toBe('up')
     expect(run(gov, 30, 3000)).toBe('down')
-    expect(run(gov, 60, 4000)).toBe('up')
-    expect(gov.locked).toBe(true)
-    expect(run(gov, 30, 5000)).toBeNull()
+    // Sustained 60fps for 5s should ask to go back up, but must not — the
+    // tier it would return to is the one that already failed.
+    expect(run(gov, 60, 5000)).toBeNull()
+    expect(gov.locked).toBe(false)
   })
 })
