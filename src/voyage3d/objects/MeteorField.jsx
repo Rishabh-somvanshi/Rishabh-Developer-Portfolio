@@ -16,15 +16,15 @@ const DIR = new Vector3(1, -0.5, 0.15).normalize()
 const PATH = 200 // a meteor's loop length along DIR
 
 /*
- * The four labelled fundamentals, placed where the old DOM meteors sat
- * (x%, y% of the field → world units around ORIGINS_CENTER), each drifting
- * along DIR with scroll at its old relative speed.
+ * The four labelled fundamentals: the retired DOM positions scaled to the camera's
+ * visible field at this depth (±24h, ±18v), each drifting along DIR with scroll
+ * at its old relative speed.
  */
 const LABELLED = [
-  { offset: [-46, 19, 0], speed: 1.1 },
-  { offset: [13, 25, -10], speed: 0.85 },
-  { offset: [24, -7, 5], speed: 1.45 },
-  { offset: [-42, -10, 10], speed: 1.2 },
+  { offset: [-16, 9, 0], speed: 1.1 },
+  { offset: [5, 12, -6], speed: 0.85 },
+  { offset: [9, -4, 4], speed: 1.45 },
+  { offset: [-15, -5, 6], speed: 1.2 },
 ]
 
 function Shower({ count, trail }) {
@@ -83,7 +83,13 @@ function Shower({ count, trail }) {
       const hy = data.base[i * 3 + 1] + DIR.y * s
       const hz = data.base[i * 3 + 2] + DIR.z * s
       const l = data.len[i]
-      pos.set([hx - DIR.x * l, hy - DIR.y * l, hz - DIR.z * l, hx, hy, hz], i * 6)
+      const o = i * 6
+      pos[o] = hx - DIR.x * l
+      pos[o + 1] = hy - DIR.y * l
+      pos[o + 2] = hz - DIR.z * l
+      pos[o + 3] = hx
+      pos[o + 4] = hy
+      pos[o + 5] = hz
     }
     data.geometry.attributes.position.needsUpdate = true
   })
@@ -95,7 +101,7 @@ function LabelledMeteor({ label, amber, offset, speed, labelRef }) {
   const ref = useRef()
   useFrame(() => {
     const v = sceneProgress(progress.windows, progress.p, 'origins')
-    const travel = interp(v, [0, 1], [-15, 25]) * speed
+    const travel = interp(v, [0, 1], [-6, 10]) * speed
     ref.current.position.set(
       ORIGINS_CENTER[0] + offset[0] + DIR.x * travel,
       ORIGINS_CENTER[1] + offset[1] + DIR.y * travel,
