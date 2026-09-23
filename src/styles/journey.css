@@ -49,6 +49,18 @@ html.lenis.lenis-smooth {
   pointer-events: none;
 }
 
+/* The 3D world arrives after the text: fade it in rather than popping. The
+   reduced-motion wildcard below cancels this, so it simply appears. */
+.voyage-canvas {
+  animation: voyage-canvas-in 0.8s ease-out both;
+}
+
+@keyframes voyage-canvas-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* ---------- scene scaffolding ---------- */
 .scn {
   position: relative;
