@@ -7,6 +7,9 @@ import Worlds from './objects/Worlds'
 import MeteorField from './objects/MeteorField'
 import Supernova from './objects/Supernova'
 import Pulsar from './objects/Pulsar'
+import BlackHole from './objects/BlackHole'
+import WarpStreaks from './objects/WarpStreaks'
+import Earth from './objects/Earth'
 import { SUN_DIR } from './camera/stations'
 import { progress } from './store'
 
@@ -43,7 +46,9 @@ export default function Scene({ reduced }) {
       <MeteorField />
       <Supernova />
       <Pulsar />
-      {/* voyage bodies (Task 15) */}
+      <BlackHole />
+      {!reduced && <WarpStreaks />}
+      <Earth />
       <Precompile />
     </>
   )
