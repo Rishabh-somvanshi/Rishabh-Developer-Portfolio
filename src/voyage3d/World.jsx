@@ -13,7 +13,8 @@ const DEBUG = typeof window !== 'undefined' && new URLSearchParams(window.locati
 /**
  * If the GPU drops the context, three restores it automatically once the
  * loss is preventDefault()ed — that is the one restore attempt. No restore
- * within 2 s → hand the voyage to the 2D starfield.
+ * within 2 s → hand the voyage to the 2D starfield. A canvas that is being
+ * torn down (unmount, hot reload) also loses its context, and is not a failure.
  */
 function watchContextLoss(gl, onFail) {
   const canvas = gl.domElement
@@ -21,7 +22,7 @@ function watchContextLoss(gl, onFail) {
   canvas.addEventListener('webglcontextlost', (e) => {
     e.preventDefault()
     clearTimeout(timer)
-    timer = setTimeout(onFail, 2000)
+    timer = setTimeout(() => { if (canvas.isConnected) onFail() }, 2000)
   })
   canvas.addEventListener('webglcontextrestored', () => clearTimeout(timer))
 }

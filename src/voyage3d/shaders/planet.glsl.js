@@ -58,7 +58,7 @@ void main() {
   vec3 sp = normalize(vObjPos);
 
   float f = fbm(sp * 2.2 + vec3(0.0, uTime * 0.01, 0.0), uOctaves);
-  float bands = sin(sp.y * uBandFreq + f * 3.0 + uTime * uBandSpeed) * 0.5 + 0.5;
+  float bands = sin(sp.y * uBandFreq + f * 1.2 + uTime * uBandSpeed) * 0.5 + 0.5;
   vec3 col = mix(uBottom, uTop, smoothstep(-0.4, 0.6, f));
   col = mix(col, uBand, smoothstep(0.55, 0.95, bands) * 0.55 * step(0.001, uBandFreq));
 
