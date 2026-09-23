@@ -18,6 +18,9 @@
  *   3. dist/index.html vs backup/live-2026-07-15/index.html: <meta> tags
  *      must be identical, so the Open Graph preview card for links already
  *      pasted into job applications doesn't change out from under them.
+ *   4. Bundle budgets: the entry chunk and the voyage shell never contain
+ *      three.js; the 3D world chunk is ≤ 300 KB gzipped; the entry chunk is
+ *      smaller (gzipped) than the pre-rebuild live bundle.
  *
  * Usage: node scripts/audit-static.mjs   (run after `npm run build`)
  * Exits non-zero if any check fails, so it's usable as a CI gate.
@@ -26,6 +29,7 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { gzipSync } from 'node:zlib'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const distDir = join(root, 'dist')
@@ -203,6 +207,52 @@ if (!existsSync(distIndexPath)) {
       console.log('    only in dist/index.html:')
       for (const t of onlyInDist) console.log(`      ${t}`)
     }
+  }
+}
+
+/* ---------------------------------------------------------------------- *
+ * 4. Bundle budgets
+ * ---------------------------------------------------------------------- */
+
+console.log('\n-- bundle budgets --')
+
+const WORLD_BUDGET = 300 * 1024
+const THREE_MARKER = 'WebGLRenderer' // survives minification: it's a class name string three.js uses
+const baselinePath = join(root, 'backup', 'live-2026-07-15', 'assets', 'index-X_nUHHwl.js')
+const gz = (file) => gzipSync(readFileSync(file)).length
+const kb = (n) => `${(n / 1024).toFixed(1)} KB`
+
+if (existsSync(distAssetsDir) && existsSync(distIndexPath)) {
+  const jsFiles = readdirSync(distAssetsDir).filter((f) => f.endsWith('.js'))
+  const entryName = (readFileSync(distIndexPath, 'utf8').match(/src="\/?assets\/([^"]+\.js)"/) || [])[1]
+  const withThree = jsFiles.filter((f) => readFileSync(join(distAssetsDir, f), 'utf8').includes(THREE_MARKER))
+  const shell = jsFiles.find((f) => f.startsWith('Journey-'))
+  const world = jsFiles.find((f) => f.startsWith('World-'))
+
+  if (!entryName) fail('could not find the entry <script> in dist/index.html')
+  else if (withThree.includes(entryName)) fail(`entry chunk ${entryName} contains three.js`)
+  else pass(`entry chunk ${entryName} is three-free`)
+
+  if (!shell) fail('no Journey-*.js chunk: the voyage is not lazy-loaded')
+  else if (withThree.includes(shell)) fail(`voyage shell ${shell} contains three.js`)
+  else pass(`voyage shell ${shell} is three-free (${kb(gz(join(distAssetsDir, shell)))} gz)`)
+
+  if (!world) {
+    fail('no World-*.js chunk: the 3D world is not lazy-loaded')
+  } else {
+    // three.js may be split into a vendor chunk that only the world imports; count every three-bearing chunk.
+    const worldTotal = [...new Set([world, ...withThree])].reduce((s, f) => s + gz(join(distAssetsDir, f)), 0)
+    if (worldTotal <= WORLD_BUDGET) pass(`3D world ${kb(worldTotal)} gz ≤ ${kb(WORLD_BUDGET)}`)
+    else fail(`3D world ${kb(worldTotal)} gz exceeds ${kb(WORLD_BUDGET)}`)
+  }
+
+  if (entryName && existsSync(baselinePath)) {
+    const now = gz(join(distAssetsDir, entryName))
+    const before = gz(baselinePath)
+    if (now < before) pass(`résumé entry ${kb(now)} gz < pre-rebuild ${kb(before)} gz`)
+    else fail(`résumé entry ${kb(now)} gz is not smaller than pre-rebuild ${kb(before)} gz`)
+  } else if (entryName) {
+    fail(`baseline ${baselinePath} missing`)
   }
 }
 
