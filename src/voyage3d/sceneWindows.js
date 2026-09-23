@@ -80,8 +80,17 @@ export function offsetWithin(el, ancestor) {
 }
 
 /**
- * Every [data-slot] box, relative to its pinned stage. A slot hidden on this
- * layout (zero size — e.g. short phones drop the twin-light visuals) is omitted.
+ * Every [data-slot] box, in viewport coordinates (matching what
+ * slotToNdc/framing.js expect). x is the stage's own rect.left plus the
+ * slot's stage-relative offset — needed because a width-capped stage (e.g.
+ * .world-stage, which is `width: min(var(--container), 100%); margin-inline:
+ * auto`) doesn't start at the viewport's left edge on wide screens. y stays
+ * stage-top-relative: while the stage is pinned, its top sits at the
+ * viewport's top, so the stage-relative offset already *is* the viewport
+ * offset — unlike rect.left, the stage's current rect.top is scroll-dependent
+ * (it's mid-scroll while pinned) and must not be used.
+ * A slot hidden on this layout (zero size — e.g. short phones drop the
+ * twin-light visuals) is omitted.
  */
 export function measureSlots(doc = document) {
   const slots = {}
@@ -89,7 +98,8 @@ export function measureSlots(doc = document) {
     const stage = el.closest('.scn-stage')
     const at = stage && offsetWithin(el, stage)
     if (!at || el.offsetWidth === 0 || el.offsetHeight === 0) continue
-    slots[el.dataset.slot] = { x: at.x, y: at.y, w: el.offsetWidth, h: el.offsetHeight }
+    const stageLeft = stage.getBoundingClientRect().left
+    slots[el.dataset.slot] = { x: stageLeft + at.x, y: at.y, w: el.offsetWidth, h: el.offsetHeight }
   }
   return slots
 }

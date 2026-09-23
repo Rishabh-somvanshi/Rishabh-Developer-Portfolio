@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeWindows, locate, sceneProgress, offsetWithin } from '../sceneWindows'
+import { computeWindows, locate, sceneProgress, offsetWithin, measureSlots } from '../sceneWindows'
 
 // Three stacked scenes on an 800px viewport: 1200 + 1600 + 900 = 3700px page.
 const VH = 800
@@ -67,5 +67,47 @@ describe('offsetWithin', () => {
   it('returns null when the ancestor is not on the chain', () => {
     const el = { offsetLeft: 0, offsetTop: 0, offsetParent: null }
     expect(offsetWithin(el, {})).toBeNull()
+  })
+})
+
+describe('measureSlots', () => {
+  // A width-capped stage (.world-stage) that's pinned but not flush with the
+  // viewport's left edge (e.g. margin-inline: auto centering it) — its rect
+  // top is scroll-dependent (-1234, mid-scroll) but its rect left is stable.
+  const stage = {
+    getBoundingClientRect: () => ({ left: 250, top: -1234 }),
+  }
+
+  function makeSlotEl(name, { offsetLeft, offsetTop, offsetWidth = 120, offsetHeight = 120 }) {
+    return {
+      dataset: { slot: name },
+      offsetLeft,
+      offsetTop,
+      offsetWidth,
+      offsetHeight,
+      offsetParent: stage,
+      closest: () => stage,
+    }
+  }
+
+  it('positions x from the stage rect (viewport-relative) and y from the stage-top-relative offset', () => {
+    const visible = makeSlotEl('mercury', { offsetLeft: 586, offsetTop: 40 })
+    const doc = { querySelectorAll: () => [visible] }
+    const slots = measureSlots(doc)
+    // x must include the stage's own viewport offset (250), not just the
+    // slot's position within the stage.
+    expect(slots.mercury.x).toBe(250 + 586)
+    // y stays stage-top-relative: the stage's current rect.top (-1234) is
+    // scroll-dependent and must NOT be folded in.
+    expect(slots.mercury.y).toBe(40)
+    expect(slots.mercury.w).toBe(120)
+    expect(slots.mercury.h).toBe(120)
+  })
+
+  it('omits a hidden slot (zero size)', () => {
+    const hidden = makeSlotEl('venus', { offsetLeft: 0, offsetTop: 0, offsetWidth: 0, offsetHeight: 0 })
+    const doc = { querySelectorAll: () => [hidden] }
+    const slots = measureSlots(doc)
+    expect(slots.venus).toBeUndefined()
   })
 })

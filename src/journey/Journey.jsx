@@ -133,8 +133,10 @@ export default function Journey({ onSkip }) {
         windows: computeWindows(measureSections(SCENE_IDS), maxScroll.current, vh),
         // The canvas is position: fixed; inset: 0, so its true height is the
         // layout viewport (innerHeight), not .scn-stage's 100svh — those two
-        // diverge once the mobile URL bar collapses (B4).
-        viewport: { w: window.innerWidth, h: window.innerHeight },
+        // diverge once the mobile URL bar collapses (B4). Width must match
+        // the canvas/camera's layout width (clientWidth) too, not
+        // innerWidth, which also counts the scrollbar (e.g. 1600 vs 1585).
+        viewport: { w: document.documentElement.clientWidth || window.innerWidth, h: window.innerHeight },
         slots: measureSlots(),
       })
     }
