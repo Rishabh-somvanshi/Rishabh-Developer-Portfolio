@@ -10,6 +10,7 @@ import Pulsar from './objects/Pulsar'
 import BlackHole from './objects/BlackHole'
 import WarpStreaks from './objects/WarpStreaks'
 import Earth from './objects/Earth'
+import Effects from './quality/Effects'
 import { SUN_DIR } from './camera/stations'
 import { progress } from './store'
 
@@ -49,6 +50,7 @@ export default function Scene({ reduced }) {
       <BlackHole />
       {!reduced && <WarpStreaks />}
       <Earth />
+      <Effects />
       <Precompile />
     </>
   )
