@@ -8,6 +8,11 @@ import { useStill } from '../MotionContext'
 import { MOON_AWARDS, MOON_RISE } from '../../data/voyage'
 
 const MOON_TONES = ['#b9b9c0', '#a7a7ae', '#8f8f97']
+// Orbit radii, as a multiple of the planet's own radius. The slot the DOM
+// reserves for a framed planet is ~1.6 r wide (see camera/framing.js's FILL),
+// so the widest orbit (1.5 r) plus the moon's own radius still lands inside
+// it — nothing pokes out of the planet's box into the card/HUD rail.
+const ORBIT_FACTOR = [1.2, 1.35, 1.5]
 
 /**
  * Three award moons rise into orbit one by one as the reader arrives at
@@ -29,12 +34,12 @@ export default function Moons({ radius }) {
       const moon = moons.current[i]
       if (!moon) return
       const rise = clamp01((v - MOON_RISE[i]) / 0.11)
-      const orbit = radius * (1.7 + i * 0.28)
+      const orbit = radius * ORBIT_FACTOR[i]
       const a = i * 2.1 + t * 0.15
       moon.position.set(
         Math.cos(a) * orbit,
-        -(1 - rise) * radius * 0.8 + Math.sin(a * 0.7) * radius * 0.15,
-        Math.sin(a) * orbit * 0.45,
+        -(1 - rise) * radius * 0.6 + Math.sin(a * 0.7) * radius * 0.15,
+        Math.sin(a) * orbit * 0.35,
       )
       moon.scale.setScalar(Math.max(rise, 0.0001))
       const label = labels.current[i]
@@ -46,7 +51,7 @@ export default function Moons({ radius }) {
     <mesh key={award} ref={(el) => (moons.current[i] = el)}>
       <sphereGeometry args={[radius * 0.13, 32, 24]} />
       <meshStandardMaterial color={MOON_TONES[i]} roughness={0.9} />
-      <Html center position={[0, radius * 0.24, 0]} zIndexRange={[0, 0]} style={{ pointerEvents: 'none' }}>
+      <Html center position={[0, -radius * 0.22, 0]} zIndexRange={[0, 0]} style={{ pointerEvents: 'none' }}>
         <span ref={(el) => (labels.current[i] = el)} className="mono moon-label" aria-hidden="true" style={{ opacity: 0 }}>
           {award}
         </span>
