@@ -1,6 +1,7 @@
 import { m, useTransform, useMotionValueEvent } from 'framer-motion'
 import { useScene } from './hooks'
 import { hero } from '../data/content'
+import { warpCurve } from '../voyage3d/fxCurves'
 
 /** Scene 9 — RE-ENTRY. The numbers earned on the way, burning in. */
 export default function Reentry({ fx, reduced }) {
@@ -8,11 +9,7 @@ export default function Reentry({ fx, reduced }) {
 
   useMotionValueEvent(p, 'change', (v) => {
     if (reduced) return
-    let warp = 0
-    if (v > 0.08 && v < 0.45) warp = (v - 0.08) / 0.37
-    else if (v >= 0.45 && v < 0.78) warp = 1
-    else if (v >= 0.78) warp = Math.max(1 - (v - 0.78) / 0.2, 0)
-    fx.current.warp = warp
+    fx.current.warp = warpCurve(v)
   })
 
   const heatO = useTransform(p, [0.16, 0.55, 0.97], [0, 0.55, 0.2])

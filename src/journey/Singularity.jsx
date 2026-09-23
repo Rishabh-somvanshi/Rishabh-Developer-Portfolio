@@ -2,6 +2,7 @@ import { m, useTransform, useMotionValueEvent } from 'framer-motion'
 import { useScene } from './hooks'
 import Astronaut from './Astronaut'
 import { skills } from '../data/content'
+import { wellCurve } from '../voyage3d/fxCurves'
 
 function BlackHole({ scale, opacity }) {
   return (
@@ -26,11 +27,7 @@ export default function Singularity({ fx, reduced }) {
   // drive the starfield lens
   useMotionValueEvent(p, 'change', (v) => {
     if (reduced) return
-    let well = 0
-    if (v > 0.02 && v < 0.42) well = Math.min((v - 0.02) / 0.14, 1)
-    else if (v >= 0.42 && v < 0.8) well = Math.max(1 - (v - 0.42) / 0.2, 0.25)
-    else if (v >= 0.8) well = Math.max(0.25 - (v - 0.8) / 0.15, 0)
-    fx.current.well = well
+    fx.current.well = wellCurve(v)
     fx.current.wellX = 0.5
     fx.current.wellY = 0.42
   })
