@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { LazyMotion, domAnimation, MotionConfig } from 'framer-motion'
 import Nav from './components/Nav'
 import Hero from './components/Hero'
@@ -6,7 +6,6 @@ import Experience from './components/Experience'
 import CaseStudies from './components/CaseStudies'
 import Skills from './components/Skills'
 import Contact from './components/Contact'
-import Journey from './journey/Journey'
 import { identity } from './data/content'
 import {
   VOYAGE_HASH,
@@ -14,6 +13,10 @@ import {
   readStoredMode,
   writeStoredMode,
 } from './lib/viewMode'
+
+// The voyage is opt-in and heavy (the 3D world lazy-loads a second chunk of its
+// own). The résumé view never downloads any of it.
+const Journey = lazy(() => import('./journey/Journey'))
 
 /**
  * Two ways in:
@@ -97,7 +100,9 @@ export default function App() {
             <button className="skip-link" onClick={exitVoyage} type="button">
               Skip to content
             </button>
-            <Journey onSkip={exitVoyage} />
+            <Suspense fallback={<div className="journey" aria-busy="true" />}>
+              <Journey onSkip={exitVoyage} />
+            </Suspense>
           </>
         ) : (
           <>

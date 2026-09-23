@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, cleanup } from '@testing-library/react'
 import App from '../App'
+import { readFileSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 /**
  * App.jsx's first-render effect (App.jsx:60-72) scrolls a deep-linked
@@ -110,5 +113,19 @@ describe('App deep-link scroll on first render', () => {
     expect(onError).not.toHaveBeenCalled()
 
     window.removeEventListener('error', onError)
+  })
+})
+
+describe('voyage code splitting', () => {
+  it('does not statically import the voyage into the résumé bundle', () => {
+    const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../App.jsx'), 'utf8')
+    expect(src).not.toMatch(/^import\s+Journey\b/m)
+    expect(src).toMatch(/lazy\(\(\) => import\('\.\/journey\/Journey'\)\)/)
+  })
+
+  it('renders the voyage once its lazy chunk resolves', async () => {
+    setHash('#voyage')
+    const { findByText } = render(<App />)
+    expect(await findByText(/Scroll to begin the voyage/i)).toBeTruthy()
   })
 })
