@@ -19,6 +19,20 @@ if (typeof window !== 'undefined' && typeof window.ResizeObserver === 'undefined
   }
 }
 
+// jsdom has no real media playback engine, so HTMLMediaElement.play/pause/
+// load are stubs that log "Not implemented: HTMLMediaElement.prototype.X"
+// to stderr instead of doing anything. App.test.jsx mounts the voyage
+// (Journey.jsx → primeAudio()/the engine construct a real jsdom Audio
+// element), so every such test prints this noise even though nothing is
+// actually broken — the engine's own try/catch and .catch() already handle
+// a real browser's play() rejecting. Replace them with harmless no-ops so
+// suite output stays readable; no test asserts on jsdom's stub behaviour.
+if (typeof window !== 'undefined' && window.HTMLMediaElement) {
+  window.HTMLMediaElement.prototype.play = () => Promise.resolve()
+  window.HTMLMediaElement.prototype.pause = () => {}
+  window.HTMLMediaElement.prototype.load = () => {}
+}
+
 if (typeof window !== 'undefined') {
   // Object.create(null) avoids prototype-pollution collisions (e.g. keys
   // named "__proto__" or "toString" would otherwise resolve against

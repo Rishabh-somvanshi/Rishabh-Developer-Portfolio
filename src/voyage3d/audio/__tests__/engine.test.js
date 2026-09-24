@@ -151,6 +151,28 @@ describe('audio engine', () => {
     expect(primed.element.play).toHaveBeenCalled()
   })
 
+  it('restores the track gain (not just master) on unmute — a mute→unmute cycle must not leave the track permanently silent', () => {
+    const primed = primedPair()
+    const { engine } = make({ primed })
+    const trackGain = primed.ctx.trackGainNode.gain
+    engine.setMuted(true)
+    vi.advanceTimersByTime(400)
+    trackGain.linearRampToValueAtTime.mockClear()
+    engine.setMuted(false)
+    expect(trackGain.linearRampToValueAtTime).toHaveBeenCalledWith(1, expect.any(Number))
+  })
+
+  it('restores the track gain (not just master) on tab return — a hide→show cycle must not leave the track permanently silent', () => {
+    const primed = primedPair()
+    const { engine } = make({ primed })
+    const trackGain = primed.ctx.trackGainNode.gain
+    engine.onVisibility(true)
+    vi.advanceTimersByTime(300)
+    trackGain.linearRampToValueAtTime.mockClear()
+    engine.onVisibility(false)
+    expect(trackGain.linearRampToValueAtTime).toHaveBeenCalledWith(1, expect.any(Number))
+  })
+
   it('keeps live voices to the current scene ±1', () => {
     const { engine, log } = make({ primed: primedPair() })
     const store = createProgressStore()
@@ -415,6 +437,19 @@ describe('track playback', () => {
     expect(elementFactory).toHaveBeenCalledWith('/audio/voyage.mp3')
     expect(created).toHaveLength(1)
     expect(created[0].play).toHaveBeenCalled()
+  })
+
+  it('releases the specific element when createMediaElementSource throws inside wireElement (trackEl never got assigned)', () => {
+    class FailingSourceAudioContext extends FakeAudioContext {
+      createMediaElementSource() {
+        throw new Error('boom')
+      }
+    }
+    const element = createFakeAudioElement('/audio/voyage.mp3')
+    const { engine } = make({ AudioContextImpl: FailingSourceAudioContext, elementFactory: () => element })
+    engine.startFromGesture()
+    expect(element.removeEventListener).toHaveBeenCalledWith('error', expect.any(Function))
+    expect(() => engine.setMuted(true)).not.toThrow()
   })
 
   it('degrades silently on a track element error — SFX and the mute toggle keep working', () => {

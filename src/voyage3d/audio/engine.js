@@ -188,7 +188,13 @@ export function createAudioEngine({
       trackEl = el
       trackSource = source
     } catch {
-      onTrackError()
+      // createMediaElementSource threw before trackEl was assigned, so
+      // onTrackError()'s `trackEl?.removeEventListener(...)` would be a
+      // no-op on whatever trackEl already held (usually null) — release the
+      // element that actually got the listener, captured here as `el`.
+      el.removeEventListener?.('error', onTrackError)
+      trackEl = null
+      trackSource = null
     }
   }
 
@@ -243,6 +249,13 @@ export function createAudioEngine({
     state = ctx.state === 'running' ? 'running' : 'idle'
     if (state === 'running') {
       fadeTo(1, fadeSeconds)
+      // Restore the track's own gain too — setMuted(true)/onVisibility(true)
+      // ramp trackGain to 0 independently of master, and the drop's one-shot
+      // fadeTrackTo(1, …) doesn't run outside the cued-track case, so master
+      // alone coming back doesn't undo a mute/hide. If a drop fade is
+      // in-flight, its own later setTimeout still lands last and still
+      // targets 1, so this doesn't fight the end state, only anticipates it.
+      if (trackEl) fadeTrackTo(1, fadeSeconds)
       trackEl?.play()?.catch(() => {})
     }
     resumed
@@ -250,6 +263,7 @@ export function createAudioEngine({
         if (ctx.state === 'running' && !muted && state !== 'closed' && !tabHidden) {
           state = 'running'
           fadeTo(1, fadeSeconds)
+          if (trackEl) fadeTrackTo(1, fadeSeconds)
           trackEl?.play()?.catch(() => {})
         }
         emit()

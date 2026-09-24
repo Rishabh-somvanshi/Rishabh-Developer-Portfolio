@@ -72,7 +72,17 @@ export class FakeAudioContext {
     return node({ fftSize: 2048, frequencyBinCount: 1024, getByteFrequencyData: vi.fn() })
   }
   createMediaElementSource(el) {
-    return node({ mediaElement: el })
+    // engine.js immediately does `source.connect(graph.trackGain)` — that's
+    // the only place the track's gain node is identifiable from outside, so
+    // capture it here rather than relying on createGain() call order (which
+    // build() could reshuffle) to find trackGain in tests.
+    const ctx = this
+    return node({
+      mediaElement: el,
+      connect: vi.fn((target) => {
+        ctx.trackGainNode = target
+      }),
+    })
   }
 }
 FakeAudioContext.instances = []
