@@ -7,7 +7,13 @@ export const TIER_SETTINGS = {
   high: { dpr: 2, bloom: true, bloomScale: 1, lensing: 'screen', stars: 20000, octaves: 5, clouds: true, meteors: 400, trail: 1, msaa: 4, segments: [96, 64] },
 }
 
-/** Phones start conservative and earn their way up; desktops start in the middle. */
+/**
+ * Phones start conservative; desktops start in the middle. Coarse-pointer
+ * devices stay on their starting tier by design (LOW unless `?tier=`
+ * overrides) — since R5 the FPS governor is frozen on coarse pointers
+ * (QualityProvider `capped`), because the 30 fps render cap makes the
+ * ≥55 fps "up" path unreachable.
+ */
 export function initialTier({ coarse }) {
   return coarse ? 'low' : 'medium'
 }
