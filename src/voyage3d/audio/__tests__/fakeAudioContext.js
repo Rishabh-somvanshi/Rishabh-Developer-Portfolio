@@ -71,5 +71,56 @@ export class FakeAudioContext {
   createAnalyser() {
     return node({ fftSize: 2048, frequencyBinCount: 1024, getByteFrequencyData: vi.fn() })
   }
+  createMediaElementSource(el) {
+    return node({ mediaElement: el })
+  }
 }
 FakeAudioContext.instances = []
+
+/**
+ * Just enough HTMLAudioElement for the track: currentTime/duration/
+ * playbackRate/preservesPitch/loop/paused, play()/pause()/load(), and a
+ * real listener list so tests can simulate an 'error' event (a 404 or a
+ * decode failure).
+ */
+export function createFakeAudioElement(src = '') {
+  const listeners = {}
+  return {
+    src,
+    currentTime: 0,
+    duration: NaN,
+    playbackRate: 1,
+    preservesPitch: true,
+    webkitPreservesPitch: true,
+    loop: false,
+    paused: true,
+    preload: '',
+    play: vi.fn(function play() {
+      this.paused = false
+      return Promise.resolve()
+    }),
+    pause: vi.fn(function pause() {
+      this.paused = true
+    }),
+    load: vi.fn(),
+    addEventListener: vi.fn((type, fn) => {
+      ;(listeners[type] ??= []).push(fn)
+    }),
+    removeEventListener: vi.fn((type, fn) => {
+      listeners[type] = (listeners[type] || []).filter((f) => f !== fn)
+    }),
+    // test helper only — not part of the real HTMLAudioElement surface
+    _emit(type) {
+      ;(listeners[type] || []).forEach((fn) => fn({ type }))
+    },
+  }
+}
+
+/** Stubbable in place of the global `Audio` constructor. */
+export class FakeAudio {
+  constructor(src) {
+    Object.assign(this, createFakeAudioElement(src))
+    FakeAudio.instances.push(this)
+  }
+}
+FakeAudio.instances = []

@@ -4,8 +4,10 @@ import {
   singularityShape,
   motionLayer,
   novaEnvelope,
+  rateForBend,
   mixFor,
   eventsBetween,
+  EVENTS,
   NEUTRAL_CUTOFF,
   REST_CUTOFF,
 } from '../score'
@@ -64,6 +66,18 @@ describe('novaEnvelope', () => {
   })
 })
 
+describe('rateForBend', () => {
+  it('maps 0 cents to unity rate and −1200 cents to 0.8, linear between, clamped', () => {
+    expect(rateForBend(0)).toBe(1)
+    expect(rateForBend(-1200)).toBeCloseTo(0.8)
+    expect(rateForBend(-600)).toBeCloseTo(0.9)
+    // Clamped past either end — the shape only ever produces [-1200, 0], but the
+    // mapping itself must not extrapolate below/above the endpoints.
+    expect(rateForBend(-2000)).toBeCloseTo(0.8)
+    expect(rateForBend(200)).toBe(1)
+  })
+})
+
 describe('mixFor', () => {
   it('is neutral before any windows are measured', () => {
     const mix = mixFor(createProgressStore(), SCENE_IDS)
@@ -75,19 +89,25 @@ describe('mixFor', () => {
 })
 
 describe('eventsBetween', () => {
-  // mercantile occupies p 0.2..0.4 with its dwell ending at 0.3
-  const windows = [{ id: 'mercantile', start: 0.2, dwellEnd: 0.3, end: 0.4 }]
+  // origins occupies p 0.2..0.4 with its dwell ending at 0.3; the first
+  // meteor pass (METEOR_PASSES[0]) is at scene progress 0.15.
+  const windows = [{ id: 'origins', start: 0.2, dwellEnd: 0.3, end: 0.4 }]
   const pAt = (v) => 0.2 + v * 0.1 // scene progress → p
 
-  it('fires a moon ping when its rise time is crossed forwards', () => {
-    expect(eventsBetween(pAt(0.29), pAt(0.31), windows)).toEqual([
-      { scene: 'mercantile', at: 0.3, name: 'moon', arg: 0 },
+  it('fires a meteor whoosh when its pass time is crossed forwards', () => {
+    expect(eventsBetween(pAt(0.14), pAt(0.16), windows)).toEqual([
+      { scene: 'origins', at: 0.15, name: 'meteor', arg: -0.6 },
     ])
   })
   it('never fires scrolling backwards', () => {
-    expect(eventsBetween(pAt(0.31), pAt(0.29), windows)).toEqual([])
+    expect(eventsBetween(pAt(0.16), pAt(0.14), windows)).toEqual([])
   })
   it('stays silent on a HUD jump (too far in one frame)', () => {
     expect(eventsBetween(0, 0.3, windows)).toEqual([])
+  })
+  it('no longer carries the moon or shield cues — their voices are gone', () => {
+    expect(EVENTS.some((e) => e.name === 'moon')).toBe(false)
+    expect(EVENTS.some((e) => e.name === 'shield')).toBe(false)
+    expect(EVENTS.every((e) => e.name === 'meteor')).toBe(true)
   })
 })

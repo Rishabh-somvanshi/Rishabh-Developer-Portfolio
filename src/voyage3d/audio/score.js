@@ -1,7 +1,7 @@
 import { sceneProgress } from '../sceneWindows'
 import { clamp01, interp } from '../interp'
 import { warpCurve } from '../fxCurves'
-import { MOON_RISE, VAULT_SHIELD_AT, METEOR_PASSES } from '../../data/voyage'
+import { METEOR_PASSES } from '../../data/voyage'
 
 /**
  * The score as pure maths: where the reader is → what every voice should do.
@@ -48,6 +48,16 @@ export function novaEnvelope(v) {
   return interp(v, [0.16, 0.26, 0.48], [0, 1, 0])
 }
 
+/**
+ * The track's playback rate through the singularity: 0 cents (no bend) → 1×,
+ * −1200 cents (a full octave down) → 0.8×, linear between, clamped at both
+ * ends. `preservesPitch` is set false on the element so pitch actually sinks
+ * with the rate instead of being corrected back out.
+ */
+export function rateForBend(cents) {
+  return interp(cents, [-1200, 0], [0.8, 1])
+}
+
 export function mixFor(store, sceneIds) {
   const { windows, p } = store
   const sing = singularityShape(sceneProgress(windows, p, 'singularity'))
@@ -65,12 +75,13 @@ export function mixFor(store, sceneIds) {
   }
 }
 
-/** One-shot cues, keyed to the same scene progress the visuals use. */
-export const EVENTS = [
-  ...MOON_RISE.map((at, i) => ({ scene: 'mercantile', at, name: 'moon', arg: i })),
-  { scene: 'vault', at: VAULT_SHIELD_AT, name: 'shield', arg: null },
-  ...METEOR_PASSES.map(({ at, pan }) => ({ scene: 'origins', at, name: 'meteor', arg: pan })),
-]
+/**
+ * One-shot cues, keyed to the same scene progress the visuals use. The moon
+ * and shield cues are gone — their voices (mercantile's bell, vault's ping)
+ * were tonal pads/one-shots removed in R4 along with the rest of the tonal
+ * score; only the meteor whooshes remain (origins is non-tonal SFX).
+ */
+export const EVENTS = [...METEOR_PASSES.map(({ at, pan }) => ({ scene: 'origins', at, name: 'meteor', arg: pan }))]
 
 /** Cues crossed while scrolling forwards between two frames. */
 export function eventsBetween(prevP, p, windows) {

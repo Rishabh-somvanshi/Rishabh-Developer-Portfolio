@@ -1,15 +1,19 @@
-import { createVoice } from './voices'
+import { createVoice, VOICE_IDS } from './voices'
 import { createNoiseBuffer, createImpulse } from './synth'
-import { mixFor } from './score'
-import { getAudioContextClass } from './context'
-import { WORLDS } from '../../data/voyage'
+import { mixFor, rateForBend } from './score'
+import { getAudioContextClass, createTrackElement } from './context'
+import { WORLDS, TRACK } from '../../data/voyage'
 
 /*
  * The soundscape's runtime. Signal graph:
  *
- *   scene voices ─┐
- *   bed drone ────┤→ bus → lowpass → duck ─┬→ master → limiter → analyser → speakers
- *   motion noise ─┘                        └→ reverb send → convolver ┘
+ *   scene voices ──┐
+ *   track element ─┤→ bus → lowpass → duck ─┬→ master → limiter → analyser → speakers
+ *   motion noise ──┘                        └→ reverb send → convolver ┘
+ *
+ * The track (Rick's music, an HTMLAudioElement routed in via
+ * createMediaElementSource) is the bed now; the old tonal pads and drone bed
+ * are gone — only non-tonal SFX voices remain (origins, stars, reentry).
  *
  * The engine owns lifecycle (gesture, mute, visibility, dispose) and turns
  * mixFor() into AudioParam ramps once per frame via update().
@@ -18,6 +22,9 @@ export const SOUND_KEY = 'rs.sound'
 const MASTER_LEVEL = 0.6
 const SCHEDULER_MS = 25
 const STOP_DELAY_MS = 200 // Delay before stopping a far voice; the 0.08s gain ramp has settled by then
+const TRACK_FADE_MS = 150 // the drop's fade-out/seek/fade-in
+const TRACK_FADE_S = TRACK_FADE_MS / 1000
+const TRACK_LOOP_EPSILON_S = 0.05 // seek back to dropAt slightly before the real end, not after it
 
 /** Each world's voice sits on its planet's side of the screen (unflipped worlds are drawn on the left). */
 const PAN = Object.fromEntries(WORLDS.map((w) => [w.id, w.flip ? 0.3 : -0.3]))
@@ -54,14 +61,22 @@ export function createAudioEngine({
   storage = defaultStorage(),
   reducedMotion = false,
   voiceFactory = createVoice,
+  voiceIds = VOICE_IDS,
+  track = TRACK,
+  elementFactory = createTrackElement,
 } = {}) {
+  const primedCtx = primed?.ctx ?? null
+  const primedElement = primed?.element ?? null
   const pref = readSoundPref(storage)
   let muted = pref ? pref === 'off' : reducedMotion
-  let state = AudioContextImpl || primed ? 'idle' : 'unsupported'
+  let state = AudioContextImpl || primedCtx ? 'idle' : 'unsupported'
   let ctx = null
   let graph = null
   let scheduler = null
   let tabHidden = false
+  let trackEl = null
+  let trackSource = null
+  let dropped = false
   const listeners = new Set()
   const pendingStops = new Map() // voice → setTimeout id
 
@@ -103,16 +118,19 @@ export function createAudioEngine({
     const bus = context.createGain()
     bus.connect(filter)
 
+    const trackGain = context.createGain()
+    trackGain.gain.value = 1
+    trackGain.connect(bus)
+
     const shared = { white: createNoiseBuffer(context, 2), brown: createNoiseBuffer(context, 2, 'brown') }
+    // Scenes with no SFX simply have no voice (the tonal pads/bed are gone).
     const voices = sceneIds.map((id) => {
+      if (!voiceIds.includes(id)) return null
       const panner = context.createStereoPanner()
       panner.pan.value = PAN[id] ?? 0
       panner.connect(bus)
       return voiceFactory(id, context, panner, shared)
     })
-    const bed = voiceFactory('bed', context, bus, shared)
-    bed.start()
-    bed.gain.gain.value = 1
 
     const motionSrc = context.createBufferSource()
     motionSrc.buffer = shared.white
@@ -128,7 +146,7 @@ export function createAudioEngine({
     motionGain.connect(bus)
     motionSrc.start()
 
-    return { master, analyser, duck, filter, voices, bed, motionGain, motionSrc }
+    return { master, analyser, duck, filter, voices, trackGain, motionGain, motionSrc }
   }
 
   function fadeTo(level, seconds) {
@@ -140,9 +158,44 @@ export function createAudioEngine({
     g.linearRampToValueAtTime(level * MASTER_LEVEL, t + seconds)
   }
 
-  function adopt(context) {
+  function fadeTrackTo(level, seconds) {
+    if (!graph) return
+    const g = graph.trackGain.gain
+    const t = ctx.currentTime
+    g.cancelScheduledValues(t)
+    g.setValueAtTime(g.value, t)
+    g.linearRampToValueAtTime(level, t + seconds)
+  }
+
+  function onTrackError() {
+    trackEl?.removeEventListener?.('error', onTrackError)
+    trackEl = null
+    trackSource = null
+  }
+
+  /** Routes the element into the graph. Degrades silently on any failure. */
+  function wireElement(el) {
+    if (!el) return
+    el.preservesPitch = false
+    el.webkitPreservesPitch = false
+    // Plain full loop when no cues are set; otherwise we own the looping
+    // (intro loop, then [dropAt, duration)) by watching currentTime ourselves.
+    el.loop = track.introEnd == null || track.dropAt == null
+    el.addEventListener?.('error', onTrackError)
+    try {
+      const source = ctx.createMediaElementSource(el)
+      source.connect(graph.trackGain)
+      trackEl = el
+      trackSource = source
+    } catch {
+      onTrackError()
+    }
+  }
+
+  function adopt(context, element = null) {
     ctx = context
     graph = build(ctx)
+    wireElement(element)
     // The browser can change the context's state on its own (system media
     // controls, another tab claiming exclusive audio, etc). Re-sync our
     // state from it rather than trusting only our own transitions.
@@ -158,7 +211,7 @@ export function createAudioEngine({
     scheduler = setInterval(() => {
       if (state !== 'running') return
       const now = ctx.currentTime
-      for (const v of graph.voices) v.schedule(now)
+      for (const v of graph.voices) v?.schedule(now)
     }, SCHEDULER_MS)
   }
 
@@ -166,7 +219,14 @@ export function createAudioEngine({
     if (ctx) return true
     if (!AudioContextImpl) return false
     try {
-      adopt(new AudioContextImpl())
+      const context = new AudioContextImpl()
+      let element = null
+      try {
+        element = elementFactory(track.src)
+      } catch {
+        element = null // the track failing to load must never take the engine down
+      }
+      adopt(context, element)
       return true
     } catch {
       state = 'unsupported'
@@ -181,22 +241,27 @@ export function createAudioEngine({
     // it already was, and we must not claim 'running' anyway.
     const resumed = ctx.resume?.()
     state = ctx.state === 'running' ? 'running' : 'idle'
-    if (state === 'running') fadeTo(1, fadeSeconds)
+    if (state === 'running') {
+      fadeTo(1, fadeSeconds)
+      trackEl?.play()?.catch(() => {})
+    }
     resumed
       ?.then(() => {
         if (ctx.state === 'running' && !muted && state !== 'closed' && !tabHidden) {
           state = 'running'
           fadeTo(1, fadeSeconds)
+          trackEl?.play()?.catch(() => {})
         }
         emit()
       })
       .catch(() => {})
   }
 
-  if (primed) {
-    adopt(primed)
+  if (primedCtx) {
+    adopt(primedCtx, primedElement)
     if (muted) {
       ctx.suspend?.()?.catch(() => {})
+      trackEl?.pause()
       state = 'suspended'
     } else {
       play(3)
@@ -210,9 +275,13 @@ export function createAudioEngine({
     if (next) {
       if (ctx && state === 'running') {
         fadeTo(0, 0.3)
+        fadeTrackTo(0, 0.3)
         state = 'suspended'
         setTimeout(() => {
-          if (muted) ctx.suspend?.()?.catch(() => {})
+          if (muted) {
+            ctx.suspend?.()?.catch(() => {})
+            trackEl?.pause()
+          }
         }, 320)
       }
     } else if (ensureContext()) {
@@ -246,9 +315,13 @@ export function createAudioEngine({
       if (!ctx || muted || state === 'closed') return
       if (hidden) {
         fadeTo(0, 0.2)
+        fadeTrackTo(0, 0.2)
         state = 'suspended'
         setTimeout(() => {
-          if (state === 'suspended') ctx.suspend?.()?.catch(() => {})
+          if (state === 'suspended') {
+            ctx.suspend?.()?.catch(() => {})
+            trackEl?.pause()
+          }
         }, 220)
       } else {
         play(0.5)
@@ -261,6 +334,7 @@ export function createAudioEngine({
       const now = ctx.currentTime
       const mix = mixFor(store, sceneIds)
       graph.voices.forEach((v, i) => {
+        if (!v) return
         const near = Math.abs(i - store.index) <= 1
         if (near) {
           v.start()
@@ -292,6 +366,7 @@ export function createAudioEngine({
         if (!v) continue
         for (const [name, value] of Object.entries(params)) v.setParam(name, value, now)
       }
+      updateTrack(store, mix.params.singularity?.bend ?? 0)
     },
 
     trigger(sceneId, name, arg) {
@@ -307,20 +382,54 @@ export function createAudioEngine({
       pendingStops.clear()
       state = 'closed'
       emit()
+      trackEl?.pause()
       if (!ctx) return
       const closing = ctx
       const g = graph
+      const el = trackEl
       fadeTo(0, 0.5)
+      fadeTrackTo(0, 0.5)
       setTimeout(() => {
         try {
           g.motionSrc.stop()
         } catch {
           /* already stopped */
         }
-        g.voices.forEach((v) => v.dispose())
-        g.bed.dispose()
+        g.voices.forEach((v) => v?.dispose())
+        if (el) {
+          el.removeEventListener?.('error', onTrackError)
+          el.src = ''
+          el.load()
+        }
         closing.close?.()?.catch(() => {})
       }, 520)
     },
+  }
+
+  /**
+   * Intro-loop → drop-on-first-flight, then loop [dropAt, duration). Null
+   * introEnd/dropAt means the track just plays from the start and loops
+   * whole (native element.loop, set once in wireElement).
+   */
+  function updateTrack(store, bend) {
+    if (!trackEl) return
+    trackEl.playbackRate = rateForBend(bend)
+    const { introEnd, dropAt } = track
+    if (introEnd == null || dropAt == null) return
+    if (!dropped) {
+      if (trackEl.currentTime >= introEnd) trackEl.currentTime = 0
+      const flewPastLaunch = store.index === 0 ? store.travel > 0.5 : store.index >= 1
+      if (flewPastLaunch) {
+        dropped = true
+        fadeTrackTo(0, TRACK_FADE_S)
+        setTimeout(() => {
+          if (state === 'closed' || !trackEl) return
+          trackEl.currentTime = dropAt
+          fadeTrackTo(1, TRACK_FADE_S)
+        }, TRACK_FADE_MS)
+      }
+    } else if (trackEl.duration && trackEl.currentTime >= trackEl.duration - TRACK_LOOP_EPSILON_S) {
+      trackEl.currentTime = dropAt
+    }
   }
 }

@@ -99,3 +99,11 @@ export const METEOR_PASSES = [
 
 /** One full pulsar rotation. Two beams → a sweep, and an audio tick, every half period. */
 export const PULSAR_PERIOD_S = 1.6
+
+/**
+ * Rick's track. `introEnd`/`dropAt` (seconds) are filled in once the file is
+ * analysed; until then both are null and the engine just plays the file from
+ * the start, looping the whole thing. Once both are numbers the engine loops
+ * the intro until the reader's first flight, then drops.
+ */
+export const TRACK = { src: '/audio/voyage.mp3', introEnd: null, dropAt: null }
