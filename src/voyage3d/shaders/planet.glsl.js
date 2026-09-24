@@ -114,7 +114,7 @@ void main() {
     lit += vec3(0.62, 0.71, 0.74) * sweep * edge * 1.2;
   }
 
-  float rim = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
+  float rim = pow(max(1.0 - max(dot(n, viewDir), 0.0), 0.0), 3.0);
   lit += mix(uTop, uTint, step(0.5, uUseMap)) * rim * 0.25 * day;
 
   gl_FragColor = vec4(lit, 1.0);

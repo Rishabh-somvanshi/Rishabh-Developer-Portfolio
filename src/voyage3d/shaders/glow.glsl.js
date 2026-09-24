@@ -14,8 +14,9 @@ uniform float uRing;
 varying vec2 vUv;
 void main() {
   float d = length(vUv - 0.5);
+  float k = (d - uRing) / 0.05; // signed, so square it by hand: a negative power base is NaN
   float a = uRing > 0.0
-    ? exp(-pow((d - uRing) / 0.05, 2.0))
+    ? exp(-k * k)
     : pow(smoothstep(0.5, 0.0, d), 2.0);
   gl_FragColor = vec4(uColor, a * uIntensity);
   #include <colorspace_fragment>
