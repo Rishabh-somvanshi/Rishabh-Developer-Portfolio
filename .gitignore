@@ -20,3 +20,7 @@ ziD32jC0
 # netlify CLI/deploy scratch
 .netlify/
 .textures-src/
+
+# Licensed track (Pixabay Content License: no standalone redistribution) —
+# kept locally for builds, never committed. See public/audio/CREDITS.md.
+public/audio/*.mp3
