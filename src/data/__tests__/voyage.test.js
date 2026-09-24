@@ -38,9 +38,10 @@ describe('voyage data', () => {
     expect(PULSAR_PERIOD_S).toBeGreaterThan(0)
   })
 
-  it('points the track at the public audio file, timings unset until the controller analyses it', () => {
+  it('points the track at the public audio file, with a whole-bar intro loop before the drop', () => {
     expect(TRACK.src).toBe('/audio/voyage.mp3')
-    expect(TRACK.introEnd).toBeNull()
-    expect(TRACK.dropAt).toBeNull()
+    const BAR_S = 3.2
+    expect(TRACK.introEnd / BAR_S).toBeCloseTo(Math.round(TRACK.introEnd / BAR_S), 5)
+    expect(TRACK.dropAt).toBeGreaterThan(TRACK.introEnd)
   })
 })

@@ -101,9 +101,10 @@ export const METEOR_PASSES = [
 export const PULSAR_PERIOD_S = 1.6
 
 /**
- * Rick's track. `introEnd`/`dropAt` (seconds) are filled in once the file is
- * analysed; until then both are null and the engine just plays the file from
- * the start, looping the whole thing. Once both are numbers the engine loops
- * the intro until the reader's first flight, then drops.
+ * Rick's track (NastelBom — "Hip Hop Background", Pixabay Content License).
+ * 75 BPM, one bar = 3.2 s, first downbeat at 0.03 s; the drop hits at 12.82 s.
+ * `introEnd` loops the first two bars [0, 6.4) — a whole number of bars, so the
+ * loop keeps the beat. `dropAt` seeks 150 ms before the hit so the engine's
+ * fade-in finishes just as the drop lands.
  */
-export const TRACK = { src: '/audio/voyage.mp3', introEnd: null, dropAt: null }
+export const TRACK = { src: '/audio/voyage.mp3', introEnd: 6.4, dropAt: 12.65 }
