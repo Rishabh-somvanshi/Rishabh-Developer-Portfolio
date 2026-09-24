@@ -15,10 +15,11 @@ export const SCENES = [
   { id: 'home', label: 'Home' },
 ]
 
-/** Voyage HUD — logo, skip lane, and the constellation progress rail. */
+/** Voyage HUD — logo, sound, skip lane, and the constellation progress rail (a reading line on phones). */
 export default function Hud({ onSkip, engine }) {
   const [active, setActive] = useState(0)
   const ticking = useRef(false)
+  const bar = useRef(null)
 
   useEffect(() => {
     const measure = () => {
@@ -29,6 +30,8 @@ export default function Hud({ onSkip, engine }) {
         if (el && el.offsetTop <= probe) idx = i
       }
       setActive(idx)
+      const max = document.documentElement.scrollHeight - window.innerHeight
+      if (bar.current) bar.current.style.transform = `scaleX(${max > 0 ? Math.min(window.scrollY / max, 1) : 0})`
       ticking.current = false
     }
     const onScroll = () => {
@@ -74,6 +77,11 @@ export default function Hud({ onSkip, engine }) {
         <button className="hud-skip mono" onClick={onSkip} type="button">
           Résumé view →
         </button>
+      </div>
+
+      {/* phones: the dot rail sits on top of the text column, so they get a reading line instead */}
+      <div className="hud-progress" aria-hidden="true">
+        <i ref={bar} />
       </div>
 
       <nav className="hud-rail" aria-label="Voyage progress">

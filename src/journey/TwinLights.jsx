@@ -1,14 +1,19 @@
+import { useRef } from 'react'
 import { m, useTransform } from 'framer-motion'
-import { useScene } from './hooks'
+import { useScene, useOverflowShift } from './hooks'
+import { progress } from '../voyage3d/store'
 import { studies } from '../data/content'
 import { IconArrow } from '../components/Reveal'
 
 const wedding = studies[0]
 const expense = studies[1]
 
-function StudyCard({ s, log }) {
+/** `range`: the beat's reading window, over which a card too tall for a phone slides up. */
+function StudyCard({ s, log, p, range, onShift }) {
+  const ref = useRef(null)
+  const y = useOverflowShift(ref, p, range, onShift)
   return (
-    <div className="world-card study-card-j">
+    <m.div ref={ref} className="world-card study-card-j" style={{ y }}>
       <p className="kicker">Self-made light · {s.id}</p>
       <h3 className="world-h">{s.name}</h3>
       <p className="world-log">{log}</p>
@@ -24,7 +29,7 @@ function StudyCard({ s, log }) {
       <a className="link-arrow" href={s.url} target="_blank" rel="noopener noreferrer">
         {s.urlLabel} <IconArrow />
       </a>
-    </div>
+    </m.div>
   )
 }
 
@@ -37,6 +42,13 @@ export default function TwinLights() {
 
   const beatAO = useTransform(p, [0.19, 0.26, 0.52, 0.58], [0, 1, 1, 0])
   const beatAY = useTransform(p, [0.19, 0.26], [44, 0])
+
+  // one camera for both beats: follow whichever card is on stage (the beats hand over at 0.58)
+  const slid = useRef({ a: 0, b: 0 })
+  const follow = (beat) => (px) => {
+    slid.current[beat] = px
+    progress.shift.stars = p.get() < 0.58 ? slid.current.a : slid.current.b
+  }
 
   const beatBO = useTransform(p, [0.58, 0.64, 0.96, 1], [0, 1, 1, 0])
   const beatBY = useTransform(p, [0.58, 0.64], [44, 0])
@@ -60,6 +72,9 @@ export default function TwinLights() {
           </div>
           <StudyCard
             s={wedding}
+            p={p}
+            range={[0.28, 0.5]}
+            onShift={follow('a')}
             log="A 500-guest, five-ceremony wedding is chaos with a guest list. Compressed into one command centre until it shone."
           />
         </m.div>
@@ -71,6 +86,9 @@ export default function TwinLights() {
           </div>
           <StudyCard
             s={expense}
+            p={p}
+            range={[0.66, 0.92]}
+            onShift={follow('b')}
             log="A pulsar keeps perfect time. So does a habit — when logging a spend takes seconds, not forms."
           />
         </m.div>

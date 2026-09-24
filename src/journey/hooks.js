@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useScroll, useSpring, useReducedMotion } from 'framer-motion'
+import { useScroll, useSpring, useReducedMotion, useTransform } from 'framer-motion'
 import { observeInView } from './observeInView'
 
 export const EASE = [0.21, 0.47, 0.32, 0.98]
@@ -50,18 +50,18 @@ function useParkWhenOffScreen(ref) {
 }
 
 /**
- * Pinned-scene progress, damped so it settles with weight instead of
- * tracking the wheel 1:1. Scene height shrinks on touch so each scene needs
- * less thumb.
- *
- * The coarse-pointer multiplier (0.58) is deliberately much more aggressive
- * than it looks. A pinned scene stays sticky for its *entire* section height
- * regardless of how much of that height its content actually fills — on a
- * phone, a screen's worth of extra pinned scroll beyond the content reads as
- * "nothing is happening," i.e. dead black space between beats. Desktop has
- * room to spare and keeps the full-length scenes (multiplier 1); phones do
- * not, so they get materially shorter scenes on purpose.
+ * Scene length in vh. Phones get slightly shorter scenes than desktop (0.85×),
+ * but never less than 145vh: a pinned scene needs real scroll past its own
+ * screen, or its card only flashes by mid-fade and the 3D flight into the
+ * next world is crammed into a thumb-flick. (The old 0.58× was tuned for the
+ * 2D voyage; with the 3D camera it left several scenes shorter than the
+ * screen itself, so they never pinned at all.)
  */
+export function sceneHeightVh(vh, coarse) {
+  return coarse ? Math.min(vh, Math.max(145, Math.round(vh * 0.85))) : vh
+}
+
+/** Pinned-scene progress, damped so it settles with weight instead of tracking the wheel 1:1. */
 export function useScene(vh) {
   const ref = useRef(null)
   const coarse = useMemo(isCoarsePointer, [])
@@ -73,6 +73,57 @@ export function useScene(vh) {
   return {
     ref,
     p: useGlide(scrollYProgress),
-    height: `${Math.round(vh * (coarse ? 0.58 : 1))}vh`,
+    height: `${sceneHeightVh(vh, coarse)}vh`,
   }
+}
+
+/**
+ * Upward shift (px) for a card that overflows its pinned stage by `overflow`
+ * px, at scene progress `v`: 0 before `range[0]`, the whole overflow after
+ * `range[1]`, linear between. A card that fits never moves.
+ */
+export function overflowShift(v, overflow, [a, b]) {
+  if (!(overflow > 0)) return 0
+  const t = Math.min(Math.max((v - a) / (b - a), 0), 1)
+  return t > 0 ? -overflow * t : 0
+}
+
+const SAFE_BOTTOM = 24 // px left clear under a card once it has slid all the way
+
+/**
+ * On a phone a world card can be taller than the room left under its planet.
+ * Instead of clipping it (the pinned stage is overflow: hidden) or trimming the
+ * résumé, the card slides up by exactly its overflow while the scene is
+ * pinned — it reads like ordinary scrolling. Measured from layout (offsetTop),
+ * never from the transformed box, so the slide can't feed back into itself.
+ * `onShift(px)` hears every change (the 3D camera follows it).
+ */
+export function useOverflowShift(ref, p, range, onShift) {
+  const overflow = useRef(0)
+  const [a, b] = range
+  useEffect(() => {
+    const el = ref.current
+    const stage = el?.closest('.beat') ?? el?.closest('.scn-stage')
+    if (!el || !stage) return undefined
+    const measure = () => {
+      let top = 0
+      for (let n = el; n && n !== stage; n = n.offsetParent) top += n.offsetTop
+      overflow.current = top + el.offsetHeight - (stage.clientHeight - SAFE_BOTTOM)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    ro?.observe(el)
+    ro?.observe(stage)
+    return () => {
+      window.removeEventListener('resize', measure)
+      ro?.disconnect()
+    }
+  }, [ref])
+  const shift = useTransform(p, (v) => overflowShift(v, overflow.current, [a, b]))
+  // the 3D camera follows the slide, so the planet rises with its card instead of being covered
+  const report = useRef(onShift)
+  report.current = onShift
+  useEffect(() => shift.on('change', (v) => report.current?.(v)), [shift])
+  return shift
 }

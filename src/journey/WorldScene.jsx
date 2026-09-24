@@ -1,5 +1,7 @@
+import { useRef } from 'react'
 import { m, useTransform } from 'framer-motion'
-import { useScene } from './hooks'
+import { useScene, useOverflowShift } from './hooks'
+import { progress } from '../voyage3d/store'
 
 /**
  * Scene template — a world flyby. The planet itself lives in the 3D world
@@ -13,7 +15,10 @@ export default function WorldScene({ id, entry, world, epithet, log, exp, flip, 
 
   const tagO = useTransform(p, [0, 0.08, 0.96, 1], [0, 1, 1, 0.5])
   const cardO = useTransform(p, [0.03, 0.14, 0.95, 1], [0, 1, 1, 0])
-  const cardY = useTransform(p, [0.03, 0.15], [48, 0])
+  const cardRise = useTransform(p, [0.03, 0.15], [48, 0])
+  const cardRef = useRef(null)
+  const cardShift = useOverflowShift(cardRef, p, [0.26, 0.88], (px) => (progress.shift[id] = px))
+  const cardY = useTransform([cardRise, cardShift], ([rise, shift]) => rise + shift)
   const bulletsO = useTransform(p, [0.11, 0.26], [0, 1])
   const bulletsY = useTransform(p, [0.11, 0.26], [26, 0])
   const moonCap = useTransform(p, [0.46, 0.56], [0, 1])
@@ -28,7 +33,7 @@ export default function WorldScene({ id, entry, world, epithet, log, exp, flip, 
           </m.div>
         </div>
 
-        <m.div className="world-card" style={{ opacity: cardO, y: cardY }}>
+        <m.div ref={cardRef} className="world-card" style={{ opacity: cardO, y: cardY }}>
           <p className="kicker">
             Entry {entry} · World: {world}
           </p>

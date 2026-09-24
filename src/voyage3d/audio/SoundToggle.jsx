@@ -56,6 +56,8 @@ export default function SoundToggle({ engine }) {
   }, [engine, playing])
 
   const label = snap.needsGesture ? '♪ tap for sound' : playing ? 'sound on' : 'sound off'
+  // phones: the bars alone read as "...." — keep a word beside them unless they're moving
+  const short = snap.needsGesture ? '♪ sound' : playing ? '' : 'off'
 
   return (
     <button
@@ -74,6 +76,11 @@ export default function SoundToggle({ engine }) {
       <span className="hud-sound-label" aria-hidden="true">
         {label}
       </span>
+      {short && (
+        <span className="hud-sound-short" aria-hidden="true">
+          {short}
+        </span>
+      )}
     </button>
   )
 }

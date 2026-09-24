@@ -33,3 +33,10 @@ describe('progress store', () => {
     expect(s.measure.version).toBe(0)
   })
 })
+
+describe('shift', () => {
+  it('starts with no scene slid', async () => {
+    const { createProgressStore } = await import('../store')
+    expect(createProgressStore().shift).toEqual({})
+  })
+})
