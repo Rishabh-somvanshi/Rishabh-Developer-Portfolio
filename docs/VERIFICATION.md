@@ -618,3 +618,28 @@ active on desktop for comparison:
   pixels (see the report for the exact before/after numbers) and there
   should be no `createLinearGradient` calls at all during warp mode or for
   ambient shooters on the phone.
+
+## 3D Voyage (React Three Fiber) — manual checks
+
+Automated: `npx vitest run` (all green) and `npm run build && npm run audit`
+(entry + voyage shell three-free, 3D world ≤ 300 KB gz, résumé entry smaller
+than the pre-rebuild bundle).
+
+By hand, on a laptop (1280×720 and a full-width screen) and a real phone:
+
+- **Framing** — while a card is pinned, each planet sits centred in its
+  dotted slot box and holds still; nothing slides under the text.
+- **Readability** — every text block keeps its dark vignette over planets,
+  stars and the nebula; no white shapes behind text.
+- **Tiers** — `?tier=low|medium|high` locks a tier. LOW has no bloom or
+  lensing but the same colours; HIGH shows the black-hole lensing ring.
+- **Sound** — first tap starts the track; the two-bar intro loops until the
+  first flight into Curo, then the drop lands on the hit. Mute (button or M)
+  is remembered across reloads; hiding the tab pauses; the Singularity slows
+  and darkens the track, then it recovers on re-entry.
+- **Phone** — steady ~30 fps scrolling, planets not cut off, text readable
+  after the URL bar collapses.
+- **Reduced motion** — no self-driven motion (no spin, twinkle, orbit or
+  warp streaks); scroll still moves the camera by cuts.
+- **Fallbacks** — without WebGL2 the 2D starfield renders; the "Résumé view"
+  button always returns to the classic page.
