@@ -12,6 +12,21 @@ export const FRAME_DISTANCE = 4.5 // camera distance from a framed body, in body
 
 const tanHalf = (fov) => Math.tan(((fov * Math.PI) / 180) / 2)
 
+export const MIN_HFOV = 26 // narrowest horizontal view, in degrees — portrait phones
+const MAX_FOV = 55
+
+/**
+ * Vertical FOV for a viewport aspect. Landscape keeps CAMERA_FOV. A portrait
+ * phone at 30° vertical sees only ~18° across, so the black hole and Earth
+ * overflowed the screen edge-to-edge and ran under the HUD; there the lens
+ * opens until the view is MIN_HFOV wide. Slot-framed worlds are unaffected —
+ * frameBody rescales them to their slots for any lens.
+ */
+export function fovFor(aspect) {
+  const needed = (2 * Math.atan(tanHalf(MIN_HFOV) / aspect) * 180) / Math.PI
+  return Math.min(MAX_FOV, Math.max(CAMERA_FOV, needed))
+}
+
 /** Slot centre in NDC (−1..1, y up) and half the slot's height in NDC units. */
 export function slotToNdc(slot, viewport) {
   return {
@@ -51,6 +66,15 @@ export function placeInSlot(cameraPosition, slot, viewport, depth, fov = CAMERA_
     position: [px + sx * depth * t * aspect, py + sy * depth * t, pz - depth],
     radius: halfH * FILL * depth * t,
   }
+}
+
+/**
+ * World-space height of a `px` screen-space move at `depth` in front of the
+ * camera — how far to move the camera so a framed body follows a card that
+ * slides up on a phone (useOverflowShift). Negative px = up the screen.
+ */
+export function pxToWorldY(px, viewportH, depth, fov) {
+  return (px / viewportH) * 2 * depth * tanHalf(fov)
 }
 
 /** Where a world's slot is before the DOM has been measured (mirrors .world-stage). */

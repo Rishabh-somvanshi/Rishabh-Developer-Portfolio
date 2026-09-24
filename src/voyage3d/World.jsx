@@ -5,8 +5,8 @@ import QualityProvider from './quality/QualityProvider'
 import LayoutProvider from './LayoutProvider'
 import Scene from './Scene'
 import FrameDriver from './FrameDriver'
-import { initialTier, tierOverride, TIER_SETTINGS } from './quality/tiers'
-import { CAMERA_FOV } from './camera/framing'
+import { initialTier, tierOverride, dprFor } from './quality/tiers'
+import { fovFor } from './camera/framing'
 import { isCoarsePointer } from '../journey/hooks'
 
 const DEBUG = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug')
@@ -39,7 +39,10 @@ export default function World({ reduced, onFail }) {
   // on every resize, so leaving it at a fixed 1 wipes QualityProvider's
   // setDpr(1.5 | 2) on the first rotation/URL-bar change (B1). The Canvas
   // prop is now the live source of truth; QualityProvider updates it here.
-  const [dpr, setDpr] = useState(() => Math.min(TIER_SETTINGS[initial].dpr, window.devicePixelRatio || 1))
+  const [dpr, setDpr] = useState(() => dprFor(initial, { coarse, deviceDpr: window.devicePixelRatio }))
+  // Created once: R3F re-applies a changed camera prop on every resize, which
+  // would fight LayoutProvider — it owns the lens (fovFor) after mount.
+  const camera = useMemo(() => ({ fov: fovFor(window.innerWidth / window.innerHeight), near: 0.1, far: 3000, position: [0, 0, 40] }), [])
   return (
     <Canvas
       className="voyage-canvas"
@@ -52,7 +55,7 @@ export default function World({ reduced, onFail }) {
       // halving GPU/battery draw. Desktop keeps the default "always" loop.
       frameloop={coarse ? 'demand' : 'always'}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
-      camera={{ fov: CAMERA_FOV, near: 0.1, far: 3000, position: [0, 0, 40] }}
+      camera={camera}
       onCreated={({ gl }) => watchContextLoss(gl, onFail)}
     >
       <color attach="background" args={['#0a0a0b']} />

@@ -90,3 +90,19 @@ describe('createFpsGovernor', () => {
     expect(gov.locked).toBe(false)
   })
 })
+
+describe('dprFor', () => {
+  it('uses the tier dpr on desktop, capped by the screen', async () => {
+    const { dprFor } = await import('../tiers')
+    expect(dprFor('low', { coarse: false, deviceDpr: 2 })).toBe(1)
+    expect(dprFor('high', { coarse: false, deviceDpr: 2 })).toBe(2)
+    expect(dprFor('high', { coarse: false, deviceDpr: 1 })).toBe(1)
+  })
+
+  it('renders phones at 1.5× even on LOW — a 3× screen at 1× looked soft and jagged', async () => {
+    const { dprFor } = await import('../tiers')
+    expect(dprFor('low', { coarse: true, deviceDpr: 3 })).toBe(1.5)
+    expect(dprFor('low', { coarse: true, deviceDpr: 1 })).toBe(1)
+    expect(dprFor('high', { coarse: true, deviceDpr: 3 })).toBe(2)
+  })
+})

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { TIER_SETTINGS, TIER_ORDER, stepTier, createFpsGovernor } from './tiers'
+import { TIER_SETTINGS, TIER_ORDER, stepTier, createFpsGovernor, dprFor } from './tiers'
 
 const QualityContext = createContext({ tier: 'medium', settings: TIER_SETTINGS.medium })
 
@@ -30,8 +30,8 @@ export default function QualityProvider({ initial, locked = false, capped = fals
   const settings = TIER_SETTINGS[tier]
 
   useEffect(() => {
-    onDpr?.(Math.min(settings.dpr, window.devicePixelRatio || 1))
-  }, [onDpr, settings.dpr])
+    onDpr?.(dprFor(tier, { coarse: capped, deviceDpr: window.devicePixelRatio }))
+  }, [onDpr, tier, capped])
 
   useFrame((_, delta) => {
     if (locked || capped) return

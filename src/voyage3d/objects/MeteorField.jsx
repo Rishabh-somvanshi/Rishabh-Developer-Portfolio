@@ -110,7 +110,9 @@ function LabelledMeteor({ label, amber, offset, speed, labelRef }) {
       ORIGINS_CENTER[1] + offset[1] + DIR.y * travel,
       ORIGINS_CENTER[2] + offset[2] + DIR.z * travel,
     )
-    if (labelRef.current) labelRef.current.style.opacity = String(interp(v, [-0.2, 0.05, 0.9, 1.1], [0, 1, 1, 0]))
+    // drei's <Html> is DOM: it ignores the hidden group, so gate it on the group ourselves
+    const shown = ref.current.parent?.visible !== false
+    if (labelRef.current) labelRef.current.style.opacity = shown ? String(interp(v, [-0.2, 0.05, 0.9, 1.1], [0, 1, 1, 0])) : '0'
   })
   return (
     <mesh ref={ref}>

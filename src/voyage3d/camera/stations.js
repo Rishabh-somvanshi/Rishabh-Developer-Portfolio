@@ -1,5 +1,5 @@
 import { SCENE_IDS, WORLDS } from '../../data/voyage'
-import { frameBody, placeInSlot, defaultSlot } from './framing'
+import { frameBody, placeInSlot, defaultSlot, fovFor } from './framing'
 
 const normalize = (v) => {
   const l = Math.hypot(...v)
@@ -48,14 +48,16 @@ const FLIP = Object.fromEntries(WORLDS.map((w) => [w.id, w.flip]))
 
 /**
  * Every station and layout-dependent size, from one DOM measurement
- * ({ viewport: {w, h}, slots: {id: {x, y, w, h}} }). Pure.
+ * ({ viewport: {w, h}, slots: {id: {x, y, w, h}} }), plus the lens they
+ * were framed for. Pure.
  */
 export function layoutFor(measure) {
   const { viewport, slots } = measure
+  const fov = fovFor(viewport.w / viewport.h)
   const scales = {}
   const stations = SCENE_IDS.map((id) => {
     if (id in FLIP) {
-      const framed = frameBody(BODIES[id], slots[id] ?? defaultSlot(FLIP[id], viewport), viewport)
+      const framed = frameBody(BODIES[id], slots[id] ?? defaultSlot(FLIP[id], viewport), viewport, fov)
       scales[id] = framed.scale
       return { id, position: framed.position, target: framed.target }
     }
@@ -66,8 +68,8 @@ export function layoutFor(measure) {
   const measured = Object.keys(slots).length > 0
   const twin = {}
   for (const key of ['nova', 'pulsar']) {
-    if (slots[key]) twin[key] = placeInSlot(FIXED_STATIONS.stars.position, slots[key], viewport, TWIN_DEPTH)
+    if (slots[key]) twin[key] = placeInSlot(FIXED_STATIONS.stars.position, slots[key], viewport, TWIN_DEPTH, fov)
     else twin[key] = measured ? null : TWIN_DEFAULTS[key]
   }
-  return { stations, scales, twin }
+  return { stations, scales, twin, fov }
 }

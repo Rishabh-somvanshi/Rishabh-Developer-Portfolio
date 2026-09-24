@@ -18,6 +18,19 @@ export function initialTier({ coarse }) {
   return coarse ? 'low' : 'medium'
 }
 
+/** Phones render at least this sharp: 1× on a 3× screen left planets soft and jagged. */
+const PHONE_MIN_DPR = 1.5
+
+/**
+ * Canvas pixel ratio for a tier. Phones stay on LOW for its lighter scene but
+ * render at 1.5× — the 30 fps demand loop leaves the fill-rate headroom, and a
+ * lone planet on a small screen is where softness shows most.
+ */
+export function dprFor(tier, { coarse, deviceDpr }) {
+  const want = coarse ? Math.max(TIER_SETTINGS[tier].dpr, PHONE_MIN_DPR) : TIER_SETTINGS[tier].dpr
+  return Math.min(want, deviceDpr || 1)
+}
+
 /**
  * Reads `?tier=low|medium|high` from a location.search string, for pinning
  * the tier during colour-pipeline verification (B2). Anything else — absent,

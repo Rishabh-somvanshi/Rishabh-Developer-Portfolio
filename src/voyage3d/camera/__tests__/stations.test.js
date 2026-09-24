@@ -43,6 +43,14 @@ describe.each(Object.entries(MEASURES))('layoutFor — %s', (_, measure) => {
   })
 })
 
+describe('lens', () => {
+  it('reports the lens the stations were framed with, wider in portrait', async () => {
+    const { CAMERA_FOV } = await import('../framing')
+    expect(layoutFor(MEASURES['desktop, unmeasured']).fov).toBe(CAMERA_FOV)
+    expect(layoutFor(MEASURES['phone, measured']).fov).toBeGreaterThan(CAMERA_FOV)
+  })
+})
+
 describe('twin lights placement', () => {
   it('uses defaults before measuring, and hides a visual the layout dropped', () => {
     expect(layoutFor(MEASURES['desktop, unmeasured']).twin.nova).not.toBeNull()
