@@ -100,17 +100,17 @@ export const studies = [
   {
     id: '01',
     name: 'Wedding Command Centre',
-    url: 'https://wedding-commander.netlify.app/',
-    urlLabel: 'wedding-commander.netlify.app',
+    url: 'https://wedding-command-centre-demo.netlify.app/',
+    urlLabel: 'wedding-command-centre-demo.netlify.app',
     tagline:
-      'A zero-backend planning tool built for a real 500-guest, multi-ceremony Lucknow wedding.',
+      'A real-time planning hub the whole family shares — built for a real 500-guest, multi-ceremony Lucknow wedding.',
     problem:
       'Indian weddings run five ceremonies deep — engagement, mehendi, haldi, sangeet, wedding day — with vendors, venues, and a serious budget scattered across spreadsheets, chats, and memory. Coordinating one for 500 guests needed a single source of truth.',
     approach:
-      'A self-contained command centre: a drag-and-drop task board filtered by ceremony and category, a line-by-line ₹ budget planner with per-category rollups, venue and vendor pipelines with status tracking, a 24-point venue-visit checklist, and a milestone timeline. Every edit auto-saves locally, with JSON import/export for backup.',
+      'Fifteen sections in one app: tasks board, ₹ budget, timeline, venues, vendors, venue checklist, events, payments, guest list, outfits, gifts & shagun, contacts, rituals, planner checklist and an open questions board. Every phone shares one live Firestore room, and a device never writes before its first server snapshot, so a fresh phone can’t overwrite the family’s data. Guest lists are encrypted in the browser (AES-GCM, PBKDF2 key) before they sync: the cloud only ever holds ciphertext.',
     outcome:
-      'One tool replaced the spreadsheet sprawl — in live use planning an actual wedding from engagement through the big day, at zero hosting cost.',
-    tags: ['JavaScript', 'Drag & drop board', 'Local-first persistence', 'Zero backend'],
+      'Replaced the spreadsheet-and-chat sprawl for the whole family — in live use planning an actual wedding on free-tier hosting. The public demo runs the same code on a made-up wedding.',
+    tags: ['JavaScript', 'Real-time Firestore sync', 'Client-side encryption', 'Mobile-first'],
     visual: 'wedding',
   },
   {
