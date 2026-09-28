@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { m, useTransform } from 'framer-motion'
-import { useScene, useOverflowShift } from './hooks'
+import { useScene, useOverflowShift, hitWhenShown } from './hooks'
 import { progress } from '../voyage3d/store'
 import { studies } from '../data/content'
 import { IconArrow } from '../components/Reveal'
@@ -42,6 +42,8 @@ export default function TwinLights() {
 
   const beatAO = useTransform(p, [0.19, 0.26, 0.52, 0.58], [0, 1, 1, 0])
   const beatAY = useTransform(p, [0.19, 0.26], [44, 0])
+  // the beats are stacked; a faded-out one must not swallow the other's link clicks
+  const beatAHit = useTransform(beatAO, hitWhenShown)
 
   // one camera for both beats: follow whichever card is on stage (the beats hand over at 0.58)
   const slid = useRef({ a: 0, b: 0 })
@@ -52,6 +54,7 @@ export default function TwinLights() {
 
   const beatBO = useTransform(p, [0.58, 0.64, 0.96, 1], [0, 1, 1, 0])
   const beatBY = useTransform(p, [0.58, 0.64], [44, 0])
+  const beatBHit = useTransform(beatBO, hitWhenShown)
 
   return (
     <section ref={ref} id="stars" className="scn" style={{ height }}>
@@ -65,7 +68,7 @@ export default function TwinLights() {
           </p>
         </m.div>
 
-        <m.div className="beat world-stage" style={{ opacity: beatAO, y: beatAY }}>
+        <m.div className="beat world-stage" style={{ opacity: beatAO, y: beatAY, pointerEvents: beatAHit }}>
           <div className="world-visual">
             <div className="twin-slot" data-slot="nova" aria-hidden="true" />
             <div className="world-tag mono">Supernova · went off beautifully</div>
@@ -79,7 +82,7 @@ export default function TwinLights() {
           />
         </m.div>
 
-        <m.div className="beat world-stage flip" style={{ opacity: beatBO, y: beatBY }}>
+        <m.div className="beat world-stage flip" style={{ opacity: beatBO, y: beatBY, pointerEvents: beatBHit }}>
           <div className="world-visual">
             <div className="twin-slot" data-slot="pulsar" aria-hidden="true" />
             <div className="world-tag mono">Pulsar · keeps perfect time</div>

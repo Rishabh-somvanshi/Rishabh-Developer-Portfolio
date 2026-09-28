@@ -78,6 +78,14 @@ export function useScene(vh) {
 }
 
 /**
+ * pointer-events for a layer faded by opacity. A layer at opacity 0 is still
+ * on top in the stacking order and swallows every click meant for what's
+ * visibly underneath it (the twin-lights beats sit on top of each other), so
+ * it only takes clicks once it is mostly shown.
+ */
+export const hitWhenShown = (opacity) => (opacity > 0.5 ? 'auto' : 'none')
+
+/**
  * Upward shift (px) for a card that overflows its pinned stage by `overflow`
  * px, at scene progress `v`: 0 before `range[0]`, the whole overflow after
  * `range[1]`, linear between. A card that fits never moves.
