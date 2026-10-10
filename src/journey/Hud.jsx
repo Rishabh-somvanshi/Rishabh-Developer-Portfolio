@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { scrollTo as lenisScrollTo } from './lenisController'
 import SoundToggle from '../voyage3d/audio/SoundToggle'
+import { track } from '../lib/analytics'
 
 export const SCENES = [
   { id: 'launch', label: 'Launch' },
@@ -20,6 +21,7 @@ export default function Hud({ onSkip, engine }) {
   const [active, setActive] = useState(0)
   const ticking = useRef(false)
   const bar = useRef(null)
+  const finished = useRef(false)
 
   useEffect(() => {
     const measure = () => {
@@ -30,6 +32,11 @@ export default function Hud({ onSkip, engine }) {
         if (el && el.offsetTop <= probe) idx = i
       }
       setActive(idx)
+      // visitor stats: scrolled all the way home, once per visit
+      if (idx === SCENES.length - 1 && !finished.current) {
+        finished.current = true
+        track('voyage-finished')
+      }
       const max = document.documentElement.scrollHeight - window.innerHeight
       if (bar.current) bar.current.style.transform = `scaleX(${max > 0 ? Math.min(window.scrollY / max, 1) : 0})`
       ticking.current = false

@@ -15,6 +15,7 @@ import {
   writeStoredMode,
 } from './lib/viewMode'
 import { primeAudio } from './voyage3d/audio/context'
+import { track } from './lib/analytics'
 
 // The voyage is opt-in and heavy (the 3D world lazy-loads a second chunk of its
 // own). The résumé view never downloads any of it.
@@ -80,6 +81,11 @@ export default function App() {
       return
     }
     window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [mode])
+
+  // visitor stats: which view each visitor actually saw — the one they landed in and any switch
+  useEffect(() => {
+    track(mode === 'voyage' ? 'voyage-opened' : 'resume-view-opened')
   }, [mode])
 
   const exitVoyage = () => {
