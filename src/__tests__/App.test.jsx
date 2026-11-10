@@ -120,9 +120,15 @@ describe('App deep-link scroll on first render', () => {
 
 describe('voyage code splitting', () => {
   it('does not statically import the voyage into the résumé bundle', () => {
-    const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../App.jsx'), 'utf8')
+    const here = dirname(fileURLToPath(import.meta.url))
+    const src = readFileSync(join(here, '../App.jsx'), 'utf8')
     expect(src).not.toMatch(/^import\s+Journey\b/m)
-    expect(src).toMatch(/lazy\(\(\) => import\('\.\/journey\/Journey'\)\)/)
+    expect(src).toMatch(/lazy\(loadJourney\)/)
+    // the dynamic imports themselves live in the preloader, shared with the warm-up
+    const preload = readFileSync(join(here, '../lib/voyagePreload.js'), 'utf8')
+    expect(preload).toMatch(/loadJourney = \(\) => import\('\.\.\/journey\/Journey'\)/)
+    expect(preload).toMatch(/loadWorld = \(\) => import\('\.\.\/voyage3d\/World'\)/)
+    expect(preload).not.toMatch(/^import .* from ['"](three|@react-three)/m)
   })
 
   it('renders the voyage once its lazy chunk resolves', async () => {

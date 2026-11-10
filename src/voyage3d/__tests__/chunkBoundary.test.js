@@ -31,6 +31,8 @@ const SHELL_SIDE = [
   '../../journey/Journey.jsx',
   '../../journey/Hud.jsx',
   '../../data/voyage.js',
+  '../../lib/voyagePreload.js',
+  '../../lib/analytics.js',
 ]
 const HEAVY_IMPORT = /from\s+['"](three|@react-three\/[^'"]+|postprocessing)['"]/
 

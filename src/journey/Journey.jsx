@@ -20,11 +20,12 @@ import { createAudioEngine } from '../voyage3d/audio/engine'
 import { takePrimedContext } from '../voyage3d/audio/context'
 import { hasWebGL2 } from '../voyage3d/webgl'
 import WebGLBoundary from '../voyage3d/WebGLBoundary'
+import { loadWorld } from '../lib/voyagePreload'
 import '../styles/journey.css'
 
 // The 3D world is its own chunk: the text and HUD render first, and the canvas
-// fades in behind them when it arrives. There is no preloader screen.
-const World = lazy(() => import('../voyage3d/World'))
+// fades in behind them when it arrives. Launch's scroll cue says so until it does.
+const World = lazy(loadWorld)
 
 function prefersReducedMotion() {
   try {
@@ -48,6 +49,8 @@ export default function Journey({ onSkip }) {
   const coarse = useMemo(isCoarsePointer, [])
   const [worldFailed, setWorldFailed] = useState(() => !hasWebGL2())
   const [engine, setEngine] = useState(null)
+  // true once the first planet is on screen (or there is no 3D world to wait for)
+  const [worldReady, setWorldReady] = useState(false)
 
   // safety: never leave FX on when scenes unmount mid-scroll
   useEffect(() => {
@@ -172,14 +175,14 @@ export default function Journey({ onSkip }) {
       ) : (
         <WebGLBoundary onFail={() => setWorldFailed(true)}>
           <Suspense fallback={null}>
-            <World reduced={!!reduced} onFail={() => setWorldFailed(true)} />
+            <World reduced={!!reduced} onFail={() => setWorldFailed(true)} onReady={() => setWorldReady(true)} />
           </Suspense>
         </WebGLBoundary>
       )}
       <div className="voyage-atmosphere" aria-hidden="true" />
       <Hud onSkip={onSkip} engine={engine} />
       <main>
-        <Launch onSkip={onSkip} />
+        <Launch onSkip={onSkip} worldReady={worldReady || worldFailed} />
         {WORLDS.map((w) => (
           <WorldScene key={w.id} {...w} />
         ))}

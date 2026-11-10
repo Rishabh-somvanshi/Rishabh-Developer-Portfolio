@@ -20,13 +20,15 @@ export function isVisibleIn(sceneIndices, { index, travel }) {
 
 /**
  * Hide an object unless one of its scenes is current, or is being flown into
- * from this one — see `isVisibleIn`. Everything stays visible until the
- * shaders have been pre-compiled, so nothing compiles mid-flight.
+ * from this one — see `isVisibleIn`. Applied from the first frame: shader
+ * pre-compilation (Precompile) walks hidden objects too, so nothing has to be
+ * left on screen for it. (It used to be: the Origins meteor shower streaked
+ * across the Launch title for as long as the textures took to download.)
  */
 export function useSceneVisibility(ref, sceneIds) {
   const indices = useMemo(() => sceneIds.map((id) => SCENE_IDS.indexOf(id)), [sceneIds])
   useFrame(() => {
-    if (!ref.current || !progress.compiled) return
+    if (!ref.current) return
     ref.current.visible = isVisibleIn(indices, progress)
   })
 }

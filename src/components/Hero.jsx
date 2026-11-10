@@ -1,8 +1,8 @@
 import { m } from 'framer-motion'
 import { identity, hero } from '../data/content'
-import { fadeUp, stagger, IconDownload, IconMail } from './Reveal'
+import { fadeUp, stagger, IconDownload, IconMail, IconOrbit } from './Reveal'
 
-export default function Hero({ onVoyage }) {
+export default function Hero({ onVoyage, onVoyageIntent }) {
   return (
     <section className="hero" id="top" aria-label="Introduction">
       <div className="hero-veil" aria-hidden="true" />
@@ -30,6 +30,19 @@ export default function Hero({ onVoyage }) {
               <IconDownload />
               Download résumé
             </a>
+            {/* the site's signature piece — a real button, in the first screen */}
+            <button
+              type="button"
+              className="btn btn-voyage"
+              onClick={onVoyage}
+              onPointerEnter={onVoyageIntent}
+              onFocus={onVoyageIntent}
+              onTouchStart={onVoyageIntent}
+            >
+              <IconOrbit />
+              Take the 3D voyage
+              <span aria-hidden="true">→</span>
+            </button>
             <a className="btn btn-ghost" href={`mailto:${identity.email}`}>
               <IconMail />
               {identity.email}
@@ -55,12 +68,6 @@ export default function Hero({ onVoyage }) {
             ))}
           </m.div>
 
-          <m.div variants={fadeUp}>
-            <button type="button" className="hero-voyage mono" onClick={onVoyage}>
-              Take the voyage
-              <span aria-hidden="true"> →</span>
-            </button>
-          </m.div>
         </m.div>
       </div>
     </section>

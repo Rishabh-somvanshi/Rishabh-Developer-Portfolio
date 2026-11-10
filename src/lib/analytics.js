@@ -23,6 +23,20 @@ export function refFromSearch(search) {
   return code || null
 }
 
+/**
+ * The address without its `?ref=` tag (other parameters and the hash kept), or
+ * null if there is none. Used to tidy the address bar once the tag has been
+ * read: a visitor who copies the link on shouldn't pass your tag along and
+ * have their friend counted as "linkedin".
+ */
+export function withoutRef({ pathname, search, hash }) {
+  const params = new URLSearchParams(search || '')
+  if (!params.has('ref')) return null
+  params.delete('ref')
+  const rest = params.toString()
+  return pathname + (rest ? `?${rest}` : '') + (hash || '')
+}
+
 /** The event name for a clicked link, or null for links not worth counting. */
 export function eventForLink({ href, download = false }) {
   if (!href) return null

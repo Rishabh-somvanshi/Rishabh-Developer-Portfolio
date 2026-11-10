@@ -16,7 +16,6 @@ export function createProgressStore() {
     lastTime: null,
     windows: [],
     measure: { version: 0, viewport: { w: 1280, h: 800 }, slots: {} },
-    compiled: false, // set once the 3D world has pre-compiled its shaders
     shift: {}, // px per scene id: how far a phone card has slid up (≤ 0) — the camera follows
   }
 }

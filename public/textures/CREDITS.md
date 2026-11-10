@@ -18,3 +18,5 @@ shipped) — re-run the script if that directory is repopulated.
 | `earth_night.webp` | `2k_earth_nightmap.jpg` | Earth (night-side city lights) |
 | `earth_clouds.webp` | `2k_earth_clouds.jpg` | Curo and Earth (cloud layer) |
 | `saturn_ring.webp` | `2k_saturn_ring_alpha.png` | Vault's ring (alpha preserved, tinted `#77878d`) |
+| `jupiter_1k.webp` | `2k_jupiter.jpg` | Mercantile on phones (1024 wide) |
+| `moon_sm.webp` | `2k_moon.jpg` | Mercantile's moons on phones (512 wide) |

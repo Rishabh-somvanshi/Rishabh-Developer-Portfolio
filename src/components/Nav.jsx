@@ -8,7 +8,7 @@ const LINKS = [
   { n: '04', label: 'Contact', href: '#contact' },
 ]
 
-export default function Nav({ onVoyage }) {
+export default function Nav({ onVoyage, onVoyageIntent }) {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -21,12 +21,19 @@ export default function Nav({ onVoyage }) {
   return (
     <header className={`nav${scrolled ? ' scrolled' : ''}`}>
       <div className="container nav-inner">
-        <a href="#top" className="nav-logo" aria-label="Rishabh Somvanshi — home">
+        <a href="#top" className="nav-logo" aria-label="rs. — Rishabh Somvanshi, back to top">
           rs<span className="dot">.</span>
         </a>
         <nav className="nav-links" aria-label="Primary">
           {onVoyage && (
-            <button className="nav-voyage" onClick={onVoyage} type="button">
+            <button
+              className="nav-voyage"
+              onClick={onVoyage}
+              onPointerEnter={onVoyageIntent}
+              onFocus={onVoyageIntent}
+              onTouchStart={onVoyageIntent}
+              type="button"
+            >
               <span>00</span>Voyage
             </button>
           )}

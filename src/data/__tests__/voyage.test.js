@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest'
+import { existsSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   SCENE_IDS,
   WORLDS,
@@ -43,5 +46,34 @@ describe('voyage data', () => {
     const BAR_S = 3.2
     expect(TRACK.introEnd / BAR_S).toBeCloseTo(Math.round(TRACK.introEnd / BAR_S), 5)
     expect(TRACK.dropAt).toBeGreaterThan(TRACK.introEnd)
+  })
+})
+
+describe('voyageTextures', () => {
+  const onDisk = (url) => existsSync(join(dirname(fileURLToPath(import.meta.url)), '../../../public', url))
+
+  it('gives a desktop the full set, clouds included, every file present', async () => {
+    const { voyageTextures } = await import('../voyage')
+    const t = voyageTextures({ coarse: false })
+    expect(Object.keys(t).sort()).toEqual(['clouds', 'curo', 'earthDay', 'earthNight', 'mercantile', 'moon', 'porcelain', 'ring', 'vault'])
+    Object.values(t).forEach((url) => expect(onDisk(url), url).toBe(true))
+  })
+
+  it('gives a phone lighter files and no cloud map (its tier never draws clouds)', async () => {
+    const { voyageTextures } = await import('../voyage')
+    const t = voyageTextures({ coarse: true })
+    expect(t.clouds).toBeNull()
+    expect(t.mercantile).toBe('/textures/jupiter_1k.webp')
+    expect(t.moon).toBe('/textures/moon_sm.webp')
+    Object.values(t).filter(Boolean).forEach((url) => expect(onDisk(url), url).toBe(true))
+  })
+
+  it('lists what to fetch first-planet-first, skipping the missing ones', async () => {
+    const { voyageTextures, textureUrls } = await import('../voyage')
+    const urls = textureUrls(voyageTextures({ coarse: true }))
+    expect(urls[0]).toBe('/textures/neptune.webp')
+    expect(urls).not.toContain(null)
+    expect(urls).toHaveLength(8)
+    expect(textureUrls(voyageTextures({ coarse: false }))).toHaveLength(9)
   })
 })

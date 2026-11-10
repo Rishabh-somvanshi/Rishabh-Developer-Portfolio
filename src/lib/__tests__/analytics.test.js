@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { LIVE_HOST, COUNTER, refFromSearch, eventForLink, track, initAnalytics } from '../analytics'
+import { LIVE_HOST, COUNTER, refFromSearch, withoutRef, eventForLink, track, initAnalytics } from '../analytics'
 
 const scripts = () => [...document.querySelectorAll('script[data-goatcounter]')]
 
@@ -100,5 +100,18 @@ describe('initAnalytics', () => {
     a.querySelector('span').click()
     expect(window.goatcounter.count).toHaveBeenCalledWith({ path: 'open-wedding-demo', title: 'open-wedding-demo', event: true })
     a.remove()
+  })
+})
+
+describe('withoutRef', () => {
+  it('drops the source tag from an address once it has been counted, keeping everything else', () => {
+    expect(withoutRef({ pathname: '/', search: '?ref=linkedin', hash: '' })).toBe('/')
+    expect(withoutRef({ pathname: '/', search: '?ref=email', hash: '#voyage' })).toBe('/#voyage')
+    expect(withoutRef({ pathname: '/', search: '?tier=low&ref=apply', hash: '#work' })).toBe('/?tier=low#work')
+  })
+
+  it('is null when there is no tag — nothing to rewrite', () => {
+    expect(withoutRef({ pathname: '/', search: '', hash: '#voyage' })).toBeNull()
+    expect(withoutRef({ pathname: '/', search: '?tier=low', hash: '' })).toBeNull()
   })
 })

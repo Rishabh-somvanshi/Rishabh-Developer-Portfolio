@@ -6,7 +6,7 @@ import { IconDownload } from '../components/Reveal'
 const CHIPS = ['React', 'Redux', 'TypeScript', 'MSAL / Azure AD', 'EMV 3DS', 'Accessibility']
 
 /** Scene 1 — LAUNCH. Silence, stars, a name — and the facts up front. */
-export default function Launch({ onSkip }) {
+export default function Launch({ onSkip, worldReady = true }) {
   const { ref, p, height } = useScene(150)
 
   const titleY = useTransform(p, [0, 1], [0, -180])
@@ -48,8 +48,9 @@ export default function Launch({ onSkip }) {
           </div>
         </m.div>
 
-        <m.div className="scroll-cue" style={{ opacity: cueO }} aria-hidden="true">
-          <span className="mono">Scroll to begin the voyage</span>
+        {/* honest about the wait: on a slow connection the 3D world lands seconds after the text */}
+        <m.div className={`scroll-cue${worldReady ? '' : ' is-loading'}`} style={{ opacity: cueO }} aria-hidden="true">
+          <span className="mono">{worldReady ? 'Scroll to begin the voyage' : 'Loading the 3D world…'}</span>
           <span className="cue-line" />
         </m.div>
       </div>

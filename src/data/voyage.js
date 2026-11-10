@@ -108,3 +108,33 @@ export const PULSAR_PERIOD_S = 1.6
  * fade-in finishes just as the drop lands.
  */
 export const TRACK = { src: '/audio/voyage.mp3', introEnd: 6.4, dropAt: 12.65 }
+
+const TEX = '/textures/'
+
+/**
+ * Which texture file each body uses. Phones (coarse pointers) get lighter
+ * files — planets are ~170px wide there — and no cloud map at all: their tier
+ * never draws clouds, so the largest texture was pure wasted download.
+ * Keyed by pointer type, not quality tier: a tier can change mid-visit, and
+ * swapping texture URLs then would re-suspend the planets.
+ */
+export function voyageTextures({ coarse }) {
+  return {
+    curo: `${TEX}neptune.webp`,
+    clouds: coarse ? null : `${TEX}earth_clouds.webp`,
+    mercantile: `${TEX}${coarse ? 'jupiter_1k' : 'jupiter'}.webp`,
+    moon: `${TEX}${coarse ? 'moon_sm' : 'moon'}.webp`,
+    vault: `${TEX}mercury.webp`,
+    ring: `${TEX}saturn_ring.webp`,
+    porcelain: `${TEX}venus.webp`,
+    earthDay: `${TEX}earth_day.webp`,
+    earthNight: `${TEX}earth_night.webp`,
+  }
+}
+
+/** The files of a texture set in voyage order — what to fetch, first planet first. */
+export function textureUrls(set) {
+  return ['curo', 'clouds', 'mercantile', 'moon', 'vault', 'ring', 'porcelain', 'earthDay', 'earthNight']
+    .map((k) => set[k])
+    .filter(Boolean)
+}

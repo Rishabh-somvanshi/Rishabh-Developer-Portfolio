@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
 import { AdditiveBlending, BackSide, Color, ShaderMaterial, SRGBColorSpace, Vector3 } from 'three'
@@ -8,14 +8,50 @@ import { cloudsFragment } from '../shaders/clouds.glsl'
 import { useQuality } from '../quality/QualityProvider'
 import { useStill } from '../MotionContext'
 import { SUN_DIR } from '../camera/stations'
+import Precompile from '../Precompile'
+
+/**
+ * The cloud deck. Its own component so it suspends on its own texture — the
+ * largest file in the voyage. The planet underneath no longer waits for it:
+ * the world appears as soon as its surface lands, and the weather joins it.
+ */
+function Clouds({ map, radius, spin, sunDir }) {
+  const { settings } = useQuality()
+  const still = useStill()
+  const ref = useRef()
+  const texture = useTexture(map)
+  const material = useMemo(
+    () =>
+      new ShaderMaterial({
+        vertexShader: planetVertex,
+        fragmentShader: cloudsFragment,
+        uniforms: { uSunDir: { value: new Vector3(...sunDir) }, uCloudMap: { value: texture } },
+        transparent: true,
+        depthWrite: false,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sunDir is static per world
+    [texture],
+  )
+  useEffect(() => () => material.dispose(), [material])
+  useFrame((_, delta) => {
+    if (ref.current && !still) ref.current.rotation.y += delta * spin * 0.4
+  })
+  return (
+    <group ref={ref}>
+      <mesh material={material} visible={settings.clouds}>
+        <sphereGeometry args={[radius * 1.012, 64, 48]} />
+      </mesh>
+    </group>
+  )
+}
 
 /**
  * A world's surface. `map` (a URL) switches the shader from procedural fbm
  * to a photo texture sampled by sphere UV — realism then comes from
  * rotation only, not a time-driven morph. `tint` multiplies the texture to
  * keep each world's palette; `nightMap` adds real night-side lights (Earth);
- * `cloudMap` gives the cloud layer its own texture instead of procedural
- * noise. `children` (rings, moons) sit in the outer group so they don't
+ * `cloudMap` adds a cloud deck, loaded separately so the surface never
+ * waits for it. `children` (rings, moons) sit in the outer group so they don't
  * spin with the surface. `physical` swaps the shader for a
  * MeshPhysicalMaterial (Porcelain's glaze) — `map` still applies to it.
  * `onFrame(material, t)` lets a world drive its own uniforms from scroll
@@ -47,18 +83,16 @@ export default function Planet3D({
   const { settings } = useQuality()
   const still = useStill()
   const spinRef = useRef()
-  const cloudRef = useRef()
   const sun = () => new Vector3(...sunDir)
 
   const urls = useMemo(() => {
     const u = {}
     if (map) u.map = map
     if (nightMap) u.nightMap = nightMap
-    if (cloudMap) u.cloudMap = cloudMap
     return u
-  }, [map, nightMap, cloudMap])
+  }, [map, nightMap])
   const textures = useTexture(urls)
-  const { map: mapTex, nightMap: nightTex, cloudMap: cloudTex } = textures
+  const { map: mapTex, nightMap: nightTex } = textures
 
   useEffect(() => {
     if (mapTex) {
@@ -118,25 +152,12 @@ export default function Planet3D({
     [],
   )
 
-  const cloudLayer = useMemo(
-    () =>
-      cloudTex ? new ShaderMaterial({
-        vertexShader: planetVertex,
-        fragmentShader: cloudsFragment,
-        uniforms: { uSunDir: { value: sun() }, uCloudMap: { value: cloudTex } },
-        transparent: true,
-        depthWrite: false,
-      }) : null,
-    [],
-  )
-
   useEffect(
     () => () => {
       surface?.dispose()
       atmosphere?.dispose()
-      cloudLayer?.dispose()
     },
-    [surface, atmosphere, cloudLayer],
+    [surface, atmosphere],
   )
 
   useFrame((state, delta) => {
@@ -152,7 +173,6 @@ export default function Planet3D({
       atmosphere.uniforms.uIntensity.value = 0.85 + 0.25 * Math.sin(t * Math.PI * 2 * auraPulseHz)
     }
     if (spinRef.current && !still) spinRef.current.rotation.y += delta * spin
-    if (cloudRef.current && !still) cloudRef.current.rotation.y += delta * spin * 0.4
     onFrame?.(surface, t)
   })
 
@@ -168,12 +188,11 @@ export default function Planet3D({
           {physical && <meshPhysicalMaterial {...physical} map={mapTex ?? physical.map} />}
         </mesh>
       </group>
-      {cloudLayer && (
-        <group ref={cloudRef}>
-          <mesh material={cloudLayer} visible={settings.clouds}>
-            <sphereGeometry args={[radius * 1.012, 64, 48]} />
-          </mesh>
-        </group>
+      {cloudMap && (
+        <Suspense fallback={null}>
+          <Clouds map={cloudMap} radius={radius} spin={spin} sunDir={sunDir} />
+          <Precompile />
+        </Suspense>
       )}
       {atmosphere && (
         <mesh material={atmosphere} scale={1.04}>

@@ -59,6 +59,14 @@ export const IconArrow = () => (
   </svg>
 )
 
+/* a planet with a tilted ring — the voyage */
+export const IconOrbit = () => (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+    <circle cx="8" cy="8" r="3.2" />
+    <ellipse cx="8" cy="8" rx="7" ry="2.4" transform="rotate(-24 8 8)" strokeLinecap="round" />
+  </svg>
+)
+
 export const IconMail = () => (
   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
     <rect x="2" y="3.5" width="12" height="9" rx="1.5" />

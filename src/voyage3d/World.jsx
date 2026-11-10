@@ -29,7 +29,7 @@ function watchContextLoss(gl, onFail) {
 }
 
 /** The voyage's 3D world — the lazy chunk entry. Errors propagate to the shell's WebGLBoundary. */
-export default function World({ reduced, onFail }) {
+export default function World({ reduced, onFail, onReady }) {
   const coarse = useMemo(isCoarsePointer, [])
   // ?tier=low|medium|high pins the tier for colour-pipeline verification (B2):
   // the governor is locked so it never steps away from the requested tier.
@@ -61,7 +61,7 @@ export default function World({ reduced, onFail }) {
       <color attach="background" args={['#0a0a0b']} />
       <QualityProvider initial={initial} locked={!!override} capped={coarse} onDpr={setDpr}>
         <LayoutProvider>
-          <Scene reduced={reduced} />
+          <Scene reduced={reduced} onReady={onReady} />
         </LayoutProvider>
       </QualityProvider>
       {coarse && <FrameDriver still={reduced} />}

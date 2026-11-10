@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { LazyMotion, domAnimation, MotionConfig } from 'framer-motion'
 import Nav from './components/Nav'
 import Hero from './components/Hero'
@@ -7,6 +7,7 @@ import CaseStudies from './components/CaseStudies'
 import Skills from './components/Skills'
 import Contact from './components/Contact'
 import ChunkErrorBoundary from './components/ChunkErrorBoundary'
+import VoyageLoading from './components/VoyageLoading'
 import { identity } from './data/content'
 import {
   VOYAGE_HASH,
@@ -16,10 +17,13 @@ import {
 } from './lib/viewMode'
 import { primeAudio } from './voyage3d/audio/context'
 import { track } from './lib/analytics'
+import { loadJourney, warmVoyage, canPrefetch } from './lib/voyagePreload'
+import { isCoarsePointer } from './journey/hooks'
 
 // The voyage is opt-in and heavy (the 3D world lazy-loads a second chunk of its
-// own). The résumé view never downloads any of it.
-const Journey = lazy(() => import('./journey/Journey'))
+// own). The résumé view never needs any of it to render; lib/voyagePreload
+// decides when it is worth fetching ahead of the click.
+const Journey = lazy(loadJourney)
 
 /**
  * Two ways in:
@@ -88,19 +92,51 @@ export default function App() {
     track(mode === 'voyage' ? 'voyage-opened' : 'resume-view-opened')
   }, [mode])
 
+  const coarse = useMemo(isCoarsePointer, [])
+
+  // Each view is a history entry, so the browser's Back button moves between
+  // them instead of leaving the site (it used to: the switch only replaced the URL).
+  useEffect(() => {
+    // a remembered voyage opens without its hash — label it, so Back can return to it
+    if (mode === 'voyage' && window.location.hash !== VOYAGE_HASH) {
+      window.history.replaceState(null, '', VOYAGE_HASH)
+    }
+    const onPop = () => {
+      const next = window.location.hash === VOYAGE_HASH ? 'voyage' : 'work'
+      setMode(next)
+      writeStoredMode(next)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- label once, on load
+  }, [])
+
+  // Fetch the voyage's code while the résumé view sits idle, so the click is instant.
+  useEffect(() => {
+    if (mode !== 'work' || !canPrefetch()) return undefined
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(() => warmVoyage(), { timeout: 5000 })
+      : window.setTimeout(() => warmVoyage(), 3000)
+    return () => (window.cancelIdleCallback ? window.cancelIdleCallback(idle) : window.clearTimeout(idle))
+  }, [mode])
+
+  // Hover, focus or touch on a voyage button: the visitor is on their way in.
+  const voyageIntent = () => warmVoyage({ textures: true, coarse })
+
   const exitVoyage = () => {
     setMode('work')
     writeStoredMode('work')
-    window.history.replaceState(null, '', '#overview')
+    window.history.pushState(null, '', '#overview')
   }
 
   const enterVoyage = () => {
     // Must run synchronously inside the click: it's the user gesture the
     // browser requires before audio may start. The engine adopts it later.
     primeAudio()
+    warmVoyage({ textures: true, coarse }) // everything at once, not one download after another
     setMode('voyage')
     writeStoredMode('voyage')
-    window.history.replaceState(null, '', VOYAGE_HASH)
+    window.history.pushState(null, '', VOYAGE_HASH)
   }
 
   return (
@@ -112,7 +148,7 @@ export default function App() {
               Skip to content
             </button>
             <ChunkErrorBoundary onError={exitVoyage}>
-              <Suspense fallback={<div className="journey" aria-busy="true" />}>
+              <Suspense fallback={<VoyageLoading />}>
                 <Journey onSkip={exitVoyage} />
               </Suspense>
             </ChunkErrorBoundary>
@@ -122,9 +158,9 @@ export default function App() {
             <a className="skip-link" href="#experience">
               Skip to content
             </a>
-            <Nav onVoyage={enterVoyage} />
+            <Nav onVoyage={enterVoyage} onVoyageIntent={voyageIntent} />
             <main id="overview">
-              <Hero onVoyage={enterVoyage} />
+              <Hero onVoyage={enterVoyage} onVoyageIntent={voyageIntent} />
               <Experience />
               <CaseStudies />
               <Skills />

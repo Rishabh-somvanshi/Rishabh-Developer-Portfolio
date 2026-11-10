@@ -247,6 +247,71 @@ section {
   transform: translateY(-2px);
 }
 
+/* The way into the 3D voyage: amber outline, so it reads as the second thing
+   to do after the résumé — never as loud as the primary. */
+.btn-voyage {
+  border-color: rgba(232, 148, 42, 0.55);
+  color: var(--accent);
+  background: rgba(232, 148, 42, 0.06);
+  cursor: pointer;
+}
+
+.btn-voyage:hover,
+.btn-voyage:focus-visible {
+  border-color: var(--accent);
+  background: rgba(232, 148, 42, 0.14);
+  color: var(--accent-bright);
+  transform: translateY(-2px);
+}
+
+.btn-voyage span {
+  transition: transform 0.18s var(--ease);
+}
+
+.btn-voyage:hover span {
+  transform: translateX(3px);
+}
+
+/* ---------- voyage loading (Suspense fallback) ---------- */
+.voyage-loading {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+}
+
+/* Fades in after a beat: an already-downloaded voyage never flashes it. */
+.voyage-loading-inner {
+  display: grid;
+  justify-items: center;
+  gap: var(--s2);
+  color: var(--text-3);
+  animation: voyage-loading-in 0.4s ease 0.25s both;
+}
+
+.voyage-loading-bar {
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--accent), transparent);
+  background-size: 200% 100%;
+  animation: voyage-loading-sweep 1.4s linear infinite;
+}
+
+@keyframes voyage-loading-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes voyage-loading-sweep {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
 /* ---------- nav ---------- */
 .nav {
   position: fixed;
@@ -981,18 +1046,17 @@ footer {
 
 /* Entry to the voyage — deliberately quieter than the résumé and contact CTAs,
    so it reads as an aside rather than competing with them. */
-.hero-voyage {
-  margin-top: var(--s3);
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--text-3);
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: color 0.16s ease;
-}
 
-.hero-voyage:hover,
-.hero-voyage:focus-visible {
-  color: var(--accent);
+
+/* Touch: text links get a tap area ~44px tall. Padding with an equal negative
+   margin grows the hit box without moving anything on the page. */
+@media (pointer: coarse) {
+  .link-arrow,
+  .contact-links a,
+  .nav-voyage,
+  .nav-logo,
+  footer a {
+    padding-block: 12px;
+    margin-block: -12px;
+  }
 }

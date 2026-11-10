@@ -345,6 +345,19 @@ html.lenis.lenis-smooth {
   transform-origin: top;
 }
 
+/* while the 3D world downloads the cue line sweeps sideways instead of pointing down */
+.scroll-cue.is-loading .cue-line {
+  width: 44px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--accent), transparent);
+  animation: cue-loading 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes cue-loading {
+  from { transform: translateX(-14px); opacity: 0.5; }
+  to { transform: translateX(14px); opacity: 1; }
+}
+
 @keyframes cue {
   0% { transform: scaleY(0); opacity: 0; }
   35% { transform: scaleY(1); opacity: 1; }

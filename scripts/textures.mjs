@@ -26,7 +26,11 @@ const JOBS = [
   { src: '2k_earth_nightmap.jpg', out: 'earth_night.webp', width: 2048, height: 1024, quality: 80 },
   { src: '2k_mercury.jpg', out: 'mercury.webp', width: 1024, height: 512, quality: 78 },
   { src: '2k_moon.jpg', out: 'moon.webp', width: 1024, height: 512, quality: 78 },
-  { src: '2k_earth_clouds.jpg', out: 'earth_clouds.webp', width: 2048, height: 1024, quality: 70, greyscale: true },
+  // clouds are soft by nature: 1536 wide at q60 is half the bytes of 2048/q70 with no visible loss
+  { src: '2k_earth_clouds.jpg', out: 'earth_clouds.webp', width: 1536, height: 768, quality: 60, greyscale: true },
+  // phone variants (see voyageTextures in src/data/voyage.js): planets are ~170px there
+  { src: '2k_jupiter.jpg', out: 'jupiter_1k.webp', width: 1024, height: 512, quality: 78 },
+  { src: '2k_moon.jpg', out: 'moon_sm.webp', width: 512, height: 256, quality: 75 },
   { src: '2k_saturn_ring_alpha.png', out: 'saturn_ring.webp', width: 1024, height: 64, lossless: true, alpha: true },
 ]
 
